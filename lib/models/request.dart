@@ -1,3 +1,5 @@
+import 'ocr_result.dart';
+
 enum RequestStatus { captured, sent, completed }
 
 class UploadedFile {
@@ -5,10 +7,15 @@ class UploadedFile {
   /// Lokaler Dateipfad auf dem Gerät (Kamera-Foto oder Galerie-Bild).
   /// Null bei Demo-Einträgen, die nie einen echten Datei-Ursprung hatten.
   final String? path;
-  /// Roh-Text aus der on-device OCR (Phase 1). Wird nach dem Erkennen befuellt.
+  /// Roh-Text aus der on-device OCR. Nur noch fuer die Anzeige —
+  /// zum Auswerten wird [ocrPage] genutzt, weil dort die Positionen
+  /// erhalten bleiben.
   String? recognizedText;
+  /// Erkannte Zeilen samt Bounding Box. Grundlage der Tabellen-
+  /// rekonstruktion in Phase 2.
+  OcrPage? ocrPage;
 
-  UploadedFile(this.name, {this.path, this.recognizedText});
+  UploadedFile(this.name, {this.path, this.recognizedText, this.ocrPage});
 }
 
 /// Eine Position aus der Rechnung, abgeglichen mit den Referenzdaten.

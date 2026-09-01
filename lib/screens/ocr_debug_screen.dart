@@ -1,14 +1,35 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../state/upload_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/smile_app_bar.dart';
 import 'summary_screen.dart';
 
-/// Phase 1: zeigt den rohen OCR-Text pro Datei zur Kontrolle.
-/// Die eigentliche Auswertung (Tarifcode-Erkennung, Abgleich) ist noch
-/// die Demo-Logik aus Phase 0 — echtes Parsen folgt in Phase 2.
+/// Kontrollansicht fuer die Texterkennung.
+///
+/// Zeigt nicht nur den erkannten Text, sondern auch dessen Position auf der
+/// Seite — denn genau daran haengt Phase 2: In einer Rechnung stehen
+/// Tarifcode und Betrag weit auseinander, aber auf gleicher Hoehe. Im flachen
+/// Text geht dieser Bezug verloren, in den Positionsdaten nicht.
+///
+/// Der "JSON kopieren"-Knopf gibt die Erkennung in maschinenlesbarer Form
+/// heraus, damit der Parser gegen echte Rechnungen entwickelt werden kann
+/// statt gegen ausgedachte Beispiele.
 class OcrDebugScreen extends StatelessWidget {
   const OcrDebugScreen({super.key});
+
+  String _buildJson() {
+    final pages = uploadController.currentUploadFiles
+        .where((f) => f.ocrPage != null)
+        .map((f) => f.ocrPage!.toJson())
+        .toList();
+    return const JsonEncoder.withIndent('  ').convert({'pages': pages});
+  }
+
+  int get _totalLines => uploadController.currentUploadFiles
+      .fold(0, (sum, f) => sum + (f.ocrPage?.lines.length ?? 0));
 
   @override
   Widget build(BuildContext context) {
@@ -21,11 +42,12 @@ class OcrDebugScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(14),
               color: AppColors.databoxBg,
-              child: const Text(
-                'Das ist der Rohtext, den die on-device-Texterkennung aus deinen Fotos gelesen hat — '
-                'zur Kontrolle, ob die Erkennung überhaupt brauchbar ist. Die Auswertung/den Abgleich mit '
-                'den Tarifcodes gibt es erst ab Phase 2; unten siehst du weiterhin die Demo-Auswertung.',
-                style: TextStyle(fontSize: 12, color: AppColors.slate600, height: 1.4),
+              child: Text(
+                'Erkannte Zeilen samt Position auf der Seite ($_totalLines Zeilen). '
+                'Die Zahlen in Klammern sind die Bildkoordinaten – daran erkennt die App, '
+                'welcher Betrag zu welchem Tarifcode gehört. Die Auswertung unten nutzt '
+                'noch Demo-Daten; das echte Auslesen entsteht gerade.',
+                style: const TextStyle(fontSize: 12, color: AppColors.slate600, height: 1.4),
               ),
             ),
             Expanded(
@@ -46,17 +68,49 @@ class OcrDebugScreen extends StatelessWidget {
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(f.name,
-                                      style: const TextStyle(fontWeight: FontWeight.bold), overflow: TextOverflow.ellipsis),
+                                      style: const TextStyle(fontWeight: FontWeight.bold),
+                                      overflow: TextOverflow.ellipsis),
                                 ),
+                                Text('${f.ocrPage?.lines.length ?? 0}',
+                                    style: const TextStyle(fontSize: 12, color: AppColors.slate400)),
                               ],
                             ),
                             const SizedBox(height: 8),
-                            SelectableText(
-                              (f.recognizedText == null || f.recognizedText!.trim().isEmpty)
-                                  ? '(kein Text erkannt)'
-                                  : f.recognizedText!,
-                              style: const TextStyle(fontFamily: 'monospace', fontSize: 12, color: AppColors.slate700),
-                            ),
+                            if (f.ocrPage == null)
+                              SelectableText(
+                                f.recognizedText ?? '(kein Text erkannt)',
+                                style: const TextStyle(
+                                    fontFamily: 'monospace', fontSize: 12, color: AppColors.slate700),
+                              )
+                            else
+                              for (final line in f.ocrPage!.sortedByPosition)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 4),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      SizedBox(
+                                        width: 78,
+                                        child: Text(
+                                          '(${line.box.left.round()},${line.box.top.round()})',
+                                          style: const TextStyle(
+                                              fontFamily: 'monospace',
+                                              fontSize: 10,
+                                              color: AppColors.slate400),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: SelectableText(
+                                          line.text,
+                                          style: const TextStyle(
+                                              fontFamily: 'monospace',
+                                              fontSize: 12,
+                                              color: AppColors.slate700),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                           ],
                         ),
                       ),
@@ -65,13 +119,34 @@ class OcrDebugScreen extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(20),
-              child: ElevatedButton(
-                onPressed: () {
-                  uploadController.processUpload();
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const SummaryScreen()));
-                },
-                child: const Text('Weiter zur Demo-Auswertung'),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+              child: Column(
+                children: [
+                  OutlinedButton.icon(
+                    icon: const Icon(Icons.copy_all_outlined, size: 18),
+                    label: const Text('Erkennung als JSON kopieren'),
+                    onPressed: _totalLines == 0
+                        ? null
+                        : () async {
+                            await Clipboard.setData(ClipboardData(text: _buildJson()));
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('JSON in die Zwischenablage kopiert.')),
+                              );
+                            }
+                          },
+                  ),
+                  const SizedBox(height: 10),
+                  ElevatedButton(
+                    onPressed: () {
+                      uploadController.processUpload();
+                      Navigator.push(
+                          context, MaterialPageRoute(builder: (_) => const SummaryScreen()));
+                    },
+                    child: const Text('Weiter zur Demo-Auswertung'),
+                  ),
+                ],
               ),
             ),
           ],

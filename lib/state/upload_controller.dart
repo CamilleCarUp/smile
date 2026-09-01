@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../logic/invoice_matcher.dart';
+import '../models/ocr_result.dart';
 import '../models/request.dart';
 import 'requests_repository.dart';
 
@@ -25,14 +26,21 @@ class UploadController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Laesst on-device OCR ueber alle aktuell hochgeladenen Bilder laufen
-  /// und speichert den erkannten Rohtext je Datei.
-  Future<void> runOcrOnUploads(Future<String> Function(String path) recognize) async {
+  /// Laesst on-device OCR ueber alle aktuell hochgeladenen Bilder laufen und
+  /// speichert je Datei die erkannten Zeilen samt Position.
+  ///
+  /// [recognize] wird bewusst hereingereicht statt fest verdrahtet: im Test
+  /// laesst sich so eine aufgezeichnete Erkennung einsetzen, ohne dass ein
+  /// Geraet oder ML Kit noetig waere.
+  Future<void> runOcrOnUploads(Future<OcrPage> Function(String path) recognize) async {
     for (final f in currentUploadFiles) {
       if (f.path == null) continue;
       try {
-        f.recognizedText = await recognize(f.path!);
+        final page = await recognize(f.path!);
+        f.ocrPage = page;
+        f.recognizedText = page.flatText;
       } catch (e) {
+        f.ocrPage = null;
         f.recognizedText = '(Fehler bei der Texterkennung: $e)';
       }
     }

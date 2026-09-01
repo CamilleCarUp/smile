@@ -99,7 +99,7 @@ class _UploadScreenState extends State<UploadScreen> {
 
   Future<void> _analyze() async {
     setState(() => _isAnalyzing = true);
-    await uploadController.runOcrOnUploads(ocrService.recognizeText);
+    await uploadController.runOcrOnUploads(ocrService.recognizePage);
     setState(() => _isAnalyzing = false);
     if (mounted) {
       Navigator.push(context, MaterialPageRoute(builder: (_) => const OcrDebugScreen()));
