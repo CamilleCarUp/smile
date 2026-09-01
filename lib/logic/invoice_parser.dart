@@ -134,49 +134,120 @@ List<double> numberCandidates(String raw) {
 
 // --- Zeilenbildung ----------------------------------------------------------
 
+/// Schaetzt, wie stark das Bild verkantet ist.
+///
+/// Fotografiert jemand eine Rechnung, liegt sie fast nie exakt gerade. Schon
+/// eineinhalb Grad Neigung verschieben die rechte Blattkante gegenueber der
+/// linken um mehr als eine Zeilenhoehe. Dann liegt der Betrag einer Zeile
+/// tiefer als der Tarifcode der naechsten -- und eine Zeilenbildung, die nur
+/// die Hoehe vergleicht, verschmilzt die ganze Tabelle zu einem Block.
+///
+/// Genau das ist auf einem echten Foto passiert: von fuenf Positionen kam
+/// eine an.
+///
+/// Geschaetzt wird ueber ein Projektionsprofil: Fuer eine Reihe von
+/// Kandidaten-Neigungen werden alle Textstuecke entzerrt und in schmale
+/// Hoehenbaender einsortiert. Bei der richtigen Neigung fallen sie am
+/// saubersten in wenige, dicht besetzte Baender -- also dorthin, wo die Summe
+/// der quadrierten Belegungen am groessten ist.
+double estimateSkew(List<OcrTextLine> lines, {double maxSlope = 0.06}) {
+  // Bei sehr wenigen Textstuecken ist die Schaetzung nicht belastbar; dann
+  // lieber gar nicht entzerren als in die falsche Richtung.
+  if (lines.length < 8) return 0;
+
+  final heights = lines.map((l) => l.box.height).toList()..sort();
+  final medianHeight = heights[heights.length ~/ 2];
+  final binWidth = medianHeight <= 0 ? 1.0 : medianHeight / 2;
+
+  var bestSlope = 0.0;
+  var bestScore = -1;
+
+  for (var step = -60; step <= 60; step++) {
+    final slope = maxSlope * step / 60;
+    final counts = <int, int>{};
+    for (final line in lines) {
+      final corrected = line.box.centerY - slope * line.box.centerX;
+      final bin = (corrected / binWidth).floor();
+      counts[bin] = (counts[bin] ?? 0) + 1;
+    }
+    var score = 0;
+    for (final count in counts.values) {
+      score += count * count;
+    }
+    if (score > bestScore || (score == bestScore && slope.abs() < bestSlope.abs())) {
+      bestScore = score;
+      bestSlope = slope;
+    }
+  }
+  return bestSlope;
+}
+
 /// Fasst Textstuecke zu Zeilen zusammen.
 ///
 /// Das ist der Kern: Tarifcode und Betrag stehen auf einer Rechnung weit
-/// auseinander (hier ueber 1500 Pixel), aber auf gleicher Hoehe. Im flachen
-/// Erkennungstext geht dieser Bezug verloren — ueber die vertikale
-/// Ueberlappung nicht.
+/// auseinander (auf echten Belegen ueber 1500 Pixel), aber auf gleicher
+/// Hoehe. Im flachen Erkennungstext geht dieser Bezug verloren, hier nicht.
 ///
-/// [toleranceFactor] federt schraeg fotografierte Rechnungen ab und ist
-/// bewusst relativ zur Zeilenhoehe: absolute Pixelwerte waeren je nach
-/// Kameraaufloesung mal zu grosszuegig, mal zu streng.
-List<List<OcrTextLine>> groupIntoRows(List<OcrTextLine> lines, {double toleranceFactor = 0.25}) {
-  final rows = <List<OcrTextLine>>[];
+/// Zwei Dinge, die aus echten Fotos gelernt sind:
+///
+/// * Zuerst wird die Verkantung herausgerechnet (siehe [estimateSkew]).
+///   Ohne das versagt die Zeilenbildung auf jedem freihaendig aufgenommenen
+///   Bild.
+/// * Verglichen werden **Mittellinien**, nicht Ueberlappungen. Die Textkaesten
+///   sind unterschiedlich hoch -- eine lange Leistungsbezeichnung ist gut
+///   anderthalbmal so hoch wie die Zahl daneben. Ueber die Ueberlappung
+///   beruehren sich dann benachbarte Zeilen, obwohl ihre Mitten sauber
+///   getrennt liegen.
+///
+/// [rowToleranceFactor] ist bewusst relativ zur mittleren Zeilenhoehe:
+/// absolute Pixelwerte waeren je nach Kameraaufloesung mal zu grosszuegig,
+/// mal zu streng.
+List<List<OcrTextLine>> groupIntoRows(
+  List<OcrTextLine> lines, {
+  double rowToleranceFactor = 0.6,
+  double? skew,
+}) {
+  if (lines.isEmpty) return [];
 
-  final sorted = List<OcrTextLine>.of(lines)
+  final slope = skew ?? estimateSkew(lines);
+  final heights = lines.map((l) => l.box.height).toList()..sort();
+  final medianHeight = heights[heights.length ~/ 2];
+  final threshold = (medianHeight <= 0 ? 1.0 : medianHeight) * rowToleranceFactor;
+
+  final entries = lines
+      .map((l) => (line: l, y: l.box.centerY - slope * l.box.centerX))
+      .toList()
     ..sort((a, b) {
-      final byTop = a.box.top.compareTo(b.box.top);
-      return byTop != 0 ? byTop : a.box.left.compareTo(b.box.left);
+      final byY = a.y.compareTo(b.y);
+      return byY != 0 ? byY : a.line.box.left.compareTo(b.line.box.left);
     });
 
-  for (final line in sorted) {
-    List<OcrTextLine>? match;
+  final rows = <List<({OcrTextLine line, double y})>>[];
+  for (final entry in entries) {
+    List<({OcrTextLine line, double y})>? match;
     for (final row in rows) {
-      final fits = row.any((existing) {
-        final tolerance = (existing.box.height + line.box.height) / 2 * toleranceFactor;
-        return existing.box.sharesRowWith(line.box, tolerance: tolerance);
-      });
-      if (fits) {
+      if (row.any((existing) => (entry.y - existing.y).abs() <= threshold)) {
         match = row;
         break;
       }
     }
     if (match == null) {
-      rows.add([line]);
+      rows.add([entry]);
     } else {
-      match.add(line);
+      match.add(entry);
     }
   }
 
   for (final row in rows) {
-    row.sort((a, b) => a.box.left.compareTo(b.box.left));
+    row.sort((a, b) => a.line.box.left.compareTo(b.line.box.left));
   }
-  rows.sort((a, b) => a.first.box.top.compareTo(b.first.box.top));
-  return rows;
+  rows.sort((a, b) {
+    double top(List<({OcrTextLine line, double y})> r) =>
+        r.map((e) => e.y).reduce((x, y) => x < y ? x : y);
+    return top(a).compareTo(top(b));
+  });
+
+  return rows.map((row) => row.map((e) => e.line).toList()).toList();
 }
 
 // --- Parser -----------------------------------------------------------------
