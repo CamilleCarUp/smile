@@ -1,0 +1,51 @@
+{
+  "_meta": {
+    "source": "Eichmann, C. (2026) MAS-Thesis ETH Zürich, Table 3 + Smile-Mockup (costEstimates), sowie SSO/DENTOTAR-Kurzfassung",
+    "status": "PROVISORISCH – vor Produktivsetzung gegen die offizielle DENTOTAR-Originalfassung (mtk-ctm.ch) verifizieren",
+    "unit": "Taxpunkte (TP). Realer Preis = TP * Taxpunktwert (TPW) des jeweiligen Zahnarztes, steht auf der Rechnung. Thesis-Beispiele nutzen TPW = 1.20.",
+    "tp_confidence": {
+      "exact_from_mockup_js": ["4.0020", "4.0650", "4.5350", "4.5800", "4.5810", "4.5390", "4.5510"],
+      "derived_from_thesis_table3_chf": ["4.5370", "4.5410", "4.5430", "4.5450", "4.5470", "4.5530", "4.5550"]
+    }
+  },
+  "codes": [
+    { "code": "4.0020", "description_en": "Brief clinical examination", "tp": 33.1 },
+    { "code": "4.0650", "description_en": "Infiltration anesthesia", "tp": 38.4 },
+    { "code": "4.5350", "description_en": "Composite filling, single-surface", "tp": 122.0 },
+    { "code": "4.5370", "description_en": "Composite filling, interdental (anterior)", "tp": 143.3 },
+    { "code": "4.5410", "description_en": "Composite filling, premolar, two-surface", "tp": 143.3 },
+    { "code": "4.5430", "description_en": "Composite filling, molar, two-surface", "tp": 181.6 },
+    { "code": "4.5450", "description_en": "Composite filling, premolar, three-surface", "tp": 216.6 },
+    { "code": "4.5470", "description_en": "Composite filling, molar, three-surface", "tp": 233.3 },
+    { "code": "4.5390", "description_en": "Composite corner reconstruction (incisal edge)", "tp": 170.8 },
+    { "code": "4.5510", "description_en": "Composite build-up, premolar", "tp": 240.6 },
+    { "code": "4.5530", "description_en": "Composite build-up, molar, 1-2 cusps", "tp": 258.3 },
+    { "code": "4.5550", "description_en": "Composite build-up, molar, 3-4 cusps", "tp": 285.8 },
+    { "code": "4.5800", "description_en": "Enamel etching and bonding", "tp": 19.2 },
+    { "code": "4.5810", "description_en": "Dentin conditioning", "tp": 15.7 }
+  ],
+  "treatment_patterns": [
+    { "id": "single_surface_filling", "name_en": "Single-surface composite filling", "tooth_group": "All teeth", "codes": ["4.5350", "4.5800"] },
+    { "id": "interdental_anterior_filling", "name_en": "Interdental anterior filling", "tooth_group": "Incisors / Canines", "codes": ["4.5370", "4.5800"] },
+    { "id": "two_surface_filling_premolar", "name_en": "2-surface filling (premolar)", "tooth_group": "Premolars", "codes": ["4.5410", "4.5800"] },
+    { "id": "two_surface_filling_molar", "name_en": "2-surface filling (molar)", "tooth_group": "Molars", "codes": ["4.5430", "4.5800"] },
+    { "id": "three_surface_filling_premolar", "name_en": "3-surface filling (premolar)", "tooth_group": "Premolars", "codes": ["4.5450", "4.5800"] },
+    { "id": "three_surface_filling_molar", "name_en": "3-surface filling (molar)", "tooth_group": "Molars", "codes": ["4.5470", "4.5800"] },
+    { "id": "corner_reconstruction", "name_en": "Corner reconstruction", "tooth_group": "Incisors", "codes": ["4.5390", "4.5800"] },
+    { "id": "cusp_reconstruction_premolar", "name_en": "Cusp reconstruction (premolar)", "tooth_group": "Premolars", "codes": ["4.5510", "4.5800"] },
+    { "id": "cusp_reconstruction_molar_1_2", "name_en": "Cusp reconstruction, molar (1-2 cusps)", "tooth_group": "Molars", "codes": ["4.5530", "4.5800"] },
+    { "id": "cusp_reconstruction_molar_3_4", "name_en": "Cusp reconstruction, molar (3-4 cusps)", "tooth_group": "Molars", "codes": ["4.5550", "4.5800"] }
+  ],
+  "example_full_treatment": {
+    "name_en": "Single Composite Filling (from thesis Summary screen)",
+    "tpw_used": 1.20,
+    "lines": [
+      { "code": "4.0020", "qty": 1 },
+      { "code": "4.0650", "qty": 2 },
+      { "code": "4.5350", "qty": 1 },
+      { "code": "4.5800", "qty": 1 },
+      { "code": "4.5810", "qty": 1 }
+    ],
+    "note_en": "Reference case flags the second 4.0650 (Infiltration anesthesia) as questionable — a typical single-surface filling requires it only once."
+  }
+}
