@@ -1,51 +1,274 @@
 {
   "_meta": {
-    "source": "Eichmann, C. (2026) MAS-Thesis ETH Zürich, Table 3 + Smile-Mockup (costEstimates), sowie SSO/DENTOTAR-Kurzfassung",
-    "status": "PROVISORISCH – vor Produktivsetzung gegen die offizielle DENTOTAR-Originalfassung (mtk-ctm.ch) verifizieren",
-    "unit": "Taxpunkte (TP). Realer Preis = TP * Taxpunktwert (TPW) des jeweiligen Zahnarztes, steht auf der Rechnung. Thesis-Beispiele nutzen TPW = 1.20.",
-    "tp_confidence": {
-      "exact_from_mockup_js": ["4.0020", "4.0650", "4.5350", "4.5800", "4.5810", "4.5390", "4.5510"],
-      "derived_from_thesis_table3_chf": ["4.5370", "4.5410", "4.5430", "4.5450", "4.5470", "4.5530", "4.5550"]
+    "status": "GEPRUEFT, ABER STARK UNVOLLSTAENDIG. Alle 14 Positionen stimmen mit dem offiziellen Katalog ueberein. Der vollstaendige Tarif umfasst rund 578 Positionen -- diese duerfen ohne Zustimmung des Herausgebers NICHT uebernommen werden.",
+    "tariff": "DENTOTAR (SSO Zahnarzttarif), Positionsnummern 4.xxxx",
+    "unit": "Taxpunkte (TP). Preis = TP * Taxpunktwert (TPW) der Praxis.",
+    "taxpunktwert": {
+      "privat_max": 1.7,
+      "privat_min": null,
+      "privat_note": "Fuer Privatpatienten ist der TPW nach oben auf 1.70 begrenzt, nach unten frei. Publizierte Preisspannen entsprechen einem Band von rund 0.85 bis 1.15.",
+      "uv_mv_iv": 1.0,
+      "okp_kvg": 3.1,
+      "okp_note": "Die obligatorische Krankenpflegeversicherung rechnet nach einem aelteren Katalog von 1994 ab."
+    },
+    "confidence_levels": {
+      "verified": "Wert stimmt in zwei unabhaengigen Quellen ueberein",
+      "reconstructed": "Aus publizierten CHF-Preisspannen zurueckgerechnet, Unsicherheit rund +/- 0.1 TP",
+      "published_mtk": "Direkt aus dem MTK-Tarifdokument UV/MV/IV (Stand 2018) uebernommen; gegen die aktuelle Fassung (gueltig ab 01.01.2025) noch nicht abgeglichen"
+    },
+    "sources": [
+      "SSO Zahnarzttarif / DENTOTAR: https://www.sso.ch/de/zahnarzttarif",
+      "MTK Zahnarzttarif UV/MV/IV, Vergleich neu-alt 2018: https://www.mtk-ctm.ch/",
+      "Publizierte Tarifuebersicht mit Preisspannen: https://www.beobachter.ch/sites/default/files/zahnarzttarife.pdf",
+      "Klickdummy und Tabelle 3 der MAS-Thesis (Eichmann, ETH Zuerich)"
+    ],
+    "copyright_note": "DENTOTAR ist ein eingetragenes Warenzeichen der Schweizerischen Zahnaerzte-Gesellschaft SSO; die Tarifwerke tragen deren Copyright. Eine vollstaendige Uebernahme in eine veroeffentlichte App bedarf der Klaerung mit der SSO.",
+    "licensing": {
+      "state": "UNGEKLAERT - blockiert die Veroeffentlichung",
+      "finding": "Der Offline-Tarifbrowser (Tarif 222) ist laut eigenem Nutzungshinweis 'fuer die interessierte Oeffentlichkeit frei einsehbar', jedoch: 'Eine weitergehende Nutzung des Offline-Browsers ist ausdruecklich untersagt.' Einsehen ist erlaubt, Uebernehmen in ein eigenes Produkt nicht.",
+      "removed_positions": 63,
+      "removed_reason": "Aus einem MTK-Dokument uebernommene Positionen wurden wieder entfernt: sie unterliegen derselben Einschraenkung.",
+      "who_to_ask": "Fuer Smile ist die SSO zustaendig, nicht die ZMT: die App richtet sich an Privatpatienten, dort gilt DENTOTAR (Herausgeberin SSO). Der UV/MV/IV-Katalog der ZMT ist fuer die Sozialversicherungs-Abrechnung gedacht und deckt unseren Fall nicht."
     }
   },
   "codes": [
-    { "code": "4.0020", "description_en": "Brief clinical examination", "tp": 33.1 },
-    { "code": "4.0650", "description_en": "Infiltration anesthesia", "tp": 38.4 },
-    { "code": "4.5350", "description_en": "Composite filling, single-surface", "tp": 122.0 },
-    { "code": "4.5370", "description_en": "Composite filling, interdental (anterior)", "tp": 143.3 },
-    { "code": "4.5410", "description_en": "Composite filling, premolar, two-surface", "tp": 143.3 },
-    { "code": "4.5430", "description_en": "Composite filling, molar, two-surface", "tp": 181.6 },
-    { "code": "4.5450", "description_en": "Composite filling, premolar, three-surface", "tp": 216.6 },
-    { "code": "4.5470", "description_en": "Composite filling, molar, three-surface", "tp": 233.3 },
-    { "code": "4.5390", "description_en": "Composite corner reconstruction (incisal edge)", "tp": 170.8 },
-    { "code": "4.5510", "description_en": "Composite build-up, premolar", "tp": 240.6 },
-    { "code": "4.5530", "description_en": "Composite build-up, molar, 1-2 cusps", "tp": 258.3 },
-    { "code": "4.5550", "description_en": "Composite build-up, molar, 3-4 cusps", "tp": 285.8 },
-    { "code": "4.5800", "description_en": "Enamel etching and bonding", "tp": 19.2 },
-    { "code": "4.5810", "description_en": "Dentin conditioning", "tp": 15.7 }
+    {
+      "code": "4.0020",
+      "description_de": "Kurzbefundaufnahme beim Notfallpatienten",
+      "description_en": "Brief clinical examination (emergency)",
+      "tp": 33.1,
+      "confidence": "verified",
+      "source": "thesis_mockup + published_price_ranges; gegen offiziellen Katalog (Tarif 222, V2.00/2025) auf Uebereinstimmung geprueft"
+    },
+    {
+      "code": "4.0650",
+      "description_de": "Infiltrationsanästhesie",
+      "description_en": "Infiltration anesthesia",
+      "tp": 38.4,
+      "confidence": "verified",
+      "source": "thesis_mockup + published_price_ranges; gegen offiziellen Katalog (Tarif 222, V2.00/2025) auf Uebereinstimmung geprueft"
+    },
+    {
+      "code": "4.5350",
+      "description_de": "Kompositfüllung, 1-flächig",
+      "description_en": "Composite filling, single-surface",
+      "tp": 122.0,
+      "confidence": "verified",
+      "source": "thesis_mockup + published_price_ranges; gegen offiziellen Katalog (Tarif 222, V2.00/2025) auf Uebereinstimmung geprueft"
+    },
+    {
+      "code": "4.5370",
+      "description_de": "Kompositfüllung, interdental Front",
+      "description_en": "Composite filling, interdental (anterior)",
+      "tp": 142.9,
+      "confidence": "verified",
+      "source": "thesis_mockup + published_price_ranges; gegen offiziellen Katalog (Tarif 222, V2.00/2025) auf Uebereinstimmung geprueft",
+      "previous_estimate": 143.3
+    },
+    {
+      "code": "4.5390",
+      "description_de": "Kompositkantenaufbau",
+      "description_en": "Composite corner reconstruction",
+      "tp": 170.8,
+      "confidence": "verified",
+      "source": "thesis_mockup + published_price_ranges; gegen offiziellen Katalog (Tarif 222, V2.00/2025) auf Uebereinstimmung geprueft"
+    },
+    {
+      "code": "4.5410",
+      "description_de": "Kompositfüllung Prämolar/Milchmolar, 2-flächig",
+      "description_en": "Composite filling, premolar, two-surface",
+      "tp": 142.9,
+      "confidence": "verified",
+      "source": "thesis_mockup + published_price_ranges; gegen offiziellen Katalog (Tarif 222, V2.00/2025) auf Uebereinstimmung geprueft",
+      "previous_estimate": 143.3
+    },
+    {
+      "code": "4.5430",
+      "description_de": "Kompositfüllung Molar, 2-flächig",
+      "description_en": "Composite filling, molar, two-surface",
+      "tp": 181.3,
+      "confidence": "verified",
+      "source": "thesis_mockup + published_price_ranges; gegen offiziellen Katalog (Tarif 222, V2.00/2025) auf Uebereinstimmung geprueft",
+      "previous_estimate": 181.6
+    },
+    {
+      "code": "4.5450",
+      "description_de": "Kompositfüllung Prämolar/Milchmolar, 3-flächig",
+      "description_en": "Composite filling, premolar, three-surface",
+      "tp": 216.2,
+      "confidence": "verified",
+      "source": "thesis_mockup + published_price_ranges; gegen offiziellen Katalog (Tarif 222, V2.00/2025) auf Uebereinstimmung geprueft",
+      "previous_estimate": 216.6
+    },
+    {
+      "code": "4.5470",
+      "description_de": "Kompositfüllung Molar, 3-flächig",
+      "description_en": "Composite filling, molar, three-surface",
+      "tp": 233.6,
+      "confidence": "verified",
+      "source": "thesis_mockup + published_price_ranges; gegen offiziellen Katalog (Tarif 222, V2.00/2025) auf Uebereinstimmung geprueft",
+      "previous_estimate": 233.3
+    },
+    {
+      "code": "4.5510",
+      "description_de": "Kompositaufbau Prämolar/Milchmolar",
+      "description_en": "Composite build-up, premolar",
+      "tp": 240.6,
+      "confidence": "verified",
+      "source": "thesis_mockup + published_price_ranges; gegen offiziellen Katalog (Tarif 222, V2.00/2025) auf Uebereinstimmung geprueft"
+    },
+    {
+      "code": "4.5530",
+      "description_de": "Kompositaufbau Molar, 1-2 Höcker",
+      "description_en": "Composite build-up, molar, 1-2 cusps",
+      "tp": 258.0,
+      "confidence": "verified",
+      "source": "thesis_mockup + published_price_ranges; gegen offiziellen Katalog (Tarif 222, V2.00/2025) auf Uebereinstimmung geprueft",
+      "previous_estimate": 258.3
+    },
+    {
+      "code": "4.5550",
+      "description_de": "Kompositaufbau Molar, 3-4 Höcker",
+      "description_en": "Composite build-up, molar, 3-4 cusps",
+      "tp": 285.9,
+      "confidence": "verified",
+      "source": "thesis_mockup + published_price_ranges; gegen offiziellen Katalog (Tarif 222, V2.00/2025) auf Uebereinstimmung geprueft",
+      "previous_estimate": 285.8
+    },
+    {
+      "code": "4.5800",
+      "description_de": "Schmelzätzung",
+      "description_en": "Enamel etching",
+      "tp": 19.2,
+      "confidence": "verified",
+      "source": "thesis_mockup + published_price_ranges; gegen offiziellen Katalog (Tarif 222, V2.00/2025) auf Uebereinstimmung geprueft"
+    },
+    {
+      "code": "4.5810",
+      "description_de": "Dentinhaftung",
+      "description_en": "Dentin bonding",
+      "tp": 15.7,
+      "confidence": "verified",
+      "source": "thesis_mockup + published_price_ranges; gegen offiziellen Katalog (Tarif 222, V2.00/2025) auf Uebereinstimmung geprueft"
+    }
   ],
   "treatment_patterns": [
-    { "id": "single_surface_filling", "name_en": "Single-surface composite filling", "tooth_group": "All teeth", "codes": ["4.5350", "4.5800"] },
-    { "id": "interdental_anterior_filling", "name_en": "Interdental anterior filling", "tooth_group": "Incisors / Canines", "codes": ["4.5370", "4.5800"] },
-    { "id": "two_surface_filling_premolar", "name_en": "2-surface filling (premolar)", "tooth_group": "Premolars", "codes": ["4.5410", "4.5800"] },
-    { "id": "two_surface_filling_molar", "name_en": "2-surface filling (molar)", "tooth_group": "Molars", "codes": ["4.5430", "4.5800"] },
-    { "id": "three_surface_filling_premolar", "name_en": "3-surface filling (premolar)", "tooth_group": "Premolars", "codes": ["4.5450", "4.5800"] },
-    { "id": "three_surface_filling_molar", "name_en": "3-surface filling (molar)", "tooth_group": "Molars", "codes": ["4.5470", "4.5800"] },
-    { "id": "corner_reconstruction", "name_en": "Corner reconstruction", "tooth_group": "Incisors", "codes": ["4.5390", "4.5800"] },
-    { "id": "cusp_reconstruction_premolar", "name_en": "Cusp reconstruction (premolar)", "tooth_group": "Premolars", "codes": ["4.5510", "4.5800"] },
-    { "id": "cusp_reconstruction_molar_1_2", "name_en": "Cusp reconstruction, molar (1-2 cusps)", "tooth_group": "Molars", "codes": ["4.5530", "4.5800"] },
-    { "id": "cusp_reconstruction_molar_3_4", "name_en": "Cusp reconstruction, molar (3-4 cusps)", "tooth_group": "Molars", "codes": ["4.5550", "4.5800"] }
+    {
+      "id": "single_surface_filling",
+      "name_de": "Einflächige Kompositfüllung",
+      "tooth_group": "alle Zähne",
+      "codes": [
+        "4.5350",
+        "4.5800"
+      ]
+    },
+    {
+      "id": "interdental_anterior_filling",
+      "name_de": "Interdentale Frontzahnfüllung",
+      "tooth_group": "Schneide-/Eckzähne",
+      "codes": [
+        "4.5370",
+        "4.5800"
+      ]
+    },
+    {
+      "id": "two_surface_filling_premolar",
+      "name_de": "Zweiflächige Füllung (Prämolar)",
+      "tooth_group": "Prämolaren",
+      "codes": [
+        "4.5410",
+        "4.5800"
+      ]
+    },
+    {
+      "id": "two_surface_filling_molar",
+      "name_de": "Zweiflächige Füllung (Molar)",
+      "tooth_group": "Molaren",
+      "codes": [
+        "4.5430",
+        "4.5800"
+      ]
+    },
+    {
+      "id": "three_surface_filling_premolar",
+      "name_de": "Dreiflächige Füllung (Prämolar)",
+      "tooth_group": "Prämolaren",
+      "codes": [
+        "4.5450",
+        "4.5800"
+      ]
+    },
+    {
+      "id": "three_surface_filling_molar",
+      "name_de": "Dreiflächige Füllung (Molar)",
+      "tooth_group": "Molaren",
+      "codes": [
+        "4.5470",
+        "4.5800"
+      ]
+    },
+    {
+      "id": "corner_reconstruction",
+      "name_de": "Kantenaufbau",
+      "tooth_group": "Schneidezähne",
+      "codes": [
+        "4.5390",
+        "4.5800"
+      ]
+    },
+    {
+      "id": "cusp_reconstruction_premolar",
+      "name_de": "Höckeraufbau (Prämolar)",
+      "tooth_group": "Prämolaren",
+      "codes": [
+        "4.5510",
+        "4.5800"
+      ]
+    },
+    {
+      "id": "cusp_reconstruction_molar_1_2",
+      "name_de": "Höckeraufbau Molar (1-2 Höcker)",
+      "tooth_group": "Molaren",
+      "codes": [
+        "4.5530",
+        "4.5800"
+      ]
+    },
+    {
+      "id": "cusp_reconstruction_molar_3_4",
+      "name_de": "Höckeraufbau Molar (3-4 Höcker)",
+      "tooth_group": "Molaren",
+      "codes": [
+        "4.5550",
+        "4.5800"
+      ]
+    }
   ],
   "example_full_treatment": {
-    "name_en": "Single Composite Filling (from thesis Summary screen)",
-    "tpw_used": 1.20,
+    "name_de": "Einflächige Kompositfüllung (Beispiel aus der Thesis)",
+    "tpw_used": 1.2,
     "lines": [
-      { "code": "4.0020", "qty": 1 },
-      { "code": "4.0650", "qty": 2 },
-      { "code": "4.5350", "qty": 1 },
-      { "code": "4.5800", "qty": 1 },
-      { "code": "4.5810", "qty": 1 }
+      {
+        "code": "4.0020",
+        "qty": 1
+      },
+      {
+        "code": "4.0650",
+        "qty": 2
+      },
+      {
+        "code": "4.5350",
+        "qty": 1
+      },
+      {
+        "code": "4.5800",
+        "qty": 1
+      },
+      {
+        "code": "4.5810",
+        "qty": 1
+      }
     ],
-    "note_en": "Reference case flags the second 4.0650 (Infiltration anesthesia) as questionable — a typical single-surface filling requires it only once."
+    "note_de": "Der Referenzfall markiert die zweite Infiltrationsanästhesie (4.0650) als klärungsbedürftig - eine einflächige Füllung sieht sie nur einmal vor."
   }
 }

@@ -1,48 +1,109 @@
 # Referenz-Tarifdaten — Status und Herkunft
 
-> ⚠️ **Vor jeder Veröffentlichung lesen.** Die aktuell hinterlegten Daten sind
-> provisorisch und rechtlich nicht geklärt.
+> 🚫 **Der grösste offene Punkt des Projekts.** Die Tarifdaten sind geprüft,
+> aber die Nutzungsrechte sind ungeklärt — und das blockiert eine
+> Veröffentlichung, nicht nur die Vollständigkeit.
 
 ## Was hinterlegt ist
 
-`assets/reference-data/dentotar_seed.json` enthält:
+`assets/reference-data/dentotar_seed.json` enthält **14 Tarifpositionen** sowie
+10 standardisierte Behandlungsmuster aus der Thesis.
 
-- **14 Tarifpositionen** mit Taxpunkte-Werten
-- **10 standardisierte Behandlungsmuster** aus der Thesis
+Der offizielle Katalog umfasst **rund 578 Positionen**. Wir haben also 2 % —
+genug, um eine Füllungsbehandlung vollständig zu prüfen, für beliebige
+Rechnungen bei weitem zu wenig.
 
-## Woher die Werte stammen
+## Die Rechtslage
 
-| Quelle | Zuverlässigkeit |
-|---|---|
-| Taxpunkte direkt aus dem Klickdummy (Kap. 4.4.2 der Thesis) | belastbar |
-| Aus CHF-Beträgen der Thesis (Tabelle 3) zurückgerechnet, Annahme TPW = 1.20 | **Annahme**, nicht verifiziert |
+Der Offline-Tarifbrowser der ZMT (Tarif 222, Version V2.00 / 01.01.2025)
+enthält den vollständigen Leistungskatalog. Sein Nutzungshinweis sagt wörtlich:
 
-Die zurückgerechneten Werte sind eine Rekonstruktion. Stimmt der angenommene
-Taxpunktwert nicht, sind sie systematisch falsch.
+> „Der im vorliegenden Offline-Tarifbrowser enthaltene Leistungskatalog des
+> Zahnarzt-Tarifs ist im Sozialversicherungsbereich UV/MV/IV anwendbar und für
+> die interessierte Öffentlichkeit frei einsehbar. […] **Eine weitergehende
+> Nutzung des Offline-Browsers ist ausdrücklich untersagt.**"
 
-## Rechenmodell
+Frei *einsehbar* ist nicht frei *verwendbar*. Nachschlagen, ob unsere Werte
+stimmen, ist Einsicht. Den Katalog in eine App zu übernehmen und auszuliefern,
+ist die untersagte weitergehende Nutzung. Dasselbe gilt für die CHM-Fassung —
+gleicher Inhalt, gleiche Bedingungen.
+
+Aus diesem Grund wurden 63 zuvor aus einem MTK-Dokument übernommene Positionen
+wieder **entfernt**. Sie stammen aus derselben Dokumentenfamilie desselben
+Herausgebers.
+
+### Wen es zu fragen gilt
+
+Nicht die ZMT, sondern die **SSO**. Der Katalog der ZMT gilt für die
+Sozialversicherung (Unfall, Militär, Invalidenversicherung). Smile richtet
+sich an **Privatpatienten** — dort gilt DENTOTAR®, herausgegeben von der
+Schweizerischen Zahnärzte-Gesellschaft SSO, mit eigenen Nutzungsbestimmungen.
+Die Anfrage muss also lauten: Darf eine patientenseitige App den
+DENTOTAR-Katalog zur Rechnungsprüfung verwenden, und zu welchen Bedingungen?
+
+## Prüfstand der 14 Positionen
+
+Alle 14 Werte stimmen **exakt** mit der amtlichen Fassung überein. Der Weg
+dorthin, weil er zeigt, wie belastbar die Werte sind:
+
+1. Sieben Werte waren aus dem Klickdummy der Thesis exakt bekannt.
+2. Für sie ergab die publizierte Tarifübersicht durchgehend dasselbe
+   Verhältnis: `unterer Preis = TP × 0.85`, `oberer Preis = TP × 1.15`.
+3. Damit liessen sich die übrigen sieben Taxpunkte zurückrechnen — sie lagen
+   zuvor um 0.1 bis 0.4 TP daneben und wurden korrigiert.
+4. Der amtliche Katalog bestätigt anschliessend **alle vierzehn**, inklusive
+   der sieben rekonstruierten, und weist das 0.85/1.15-Band als
+   `TP (PP) min` / `TP (PP) max` selbst aus.
+
+## Rechenmodell und Taxpunktwerte
 
 ```
 Preis = Taxpunkte (TP) × Taxpunktwert (TPW)
 ```
 
-Der **Taxpunktwert ist praxisabhängig** und liegt üblicherweise zwischen 1.0
-und 1.7. Er ist damit kein Fehler im System, sondern ein legitimer
-Preisgestaltungsspielraum — ein hoher TPW allein ist **keine** Auffälligkeit
-und darf auch nicht als solche dargestellt werden.
+| Bereich | Taxpunktwert |
+|---|---|
+| Privatpatienten (DENTOTAR) | nach oben auf **1.70** begrenzt, nach unten frei |
+| UV / MV / IV (Unfall, Militär, Invalidenversicherung) | fest **1.00** |
+| Obligatorische Krankenpflegeversicherung (KVG) | fest **3.10**, nach einem älteren Katalog von 1994 |
+
+Der Taxpunktwert für Privatpatienten ist **praxisabhängig und legitim**. Ein
+hoher Taxpunktwert allein ist keine Auffälligkeit und darf nicht als solche
+dargestellt werden — er ist Preisgestaltung, kein Fehler.
+
+### Eine Mehrdeutigkeit, die sich nicht auflösen lässt
+
+Publizierte Preisspannen entsprechen einem Band von etwa 0.85 bis 1.15, die
+Obergrenze liegt bei 1.70. Der zulässige Bereich umfasst damit genau den
+Faktor 2. Zum halben Taxpunktwert mit doppelten Mengen passt eine Rechnung
+deshalb **rechnerisch immer genauso gut**.
+
+Der Resolver erkennt diesen Fall und meldet ihn
+(`ResolverWarning.taxpunktwertAmbiguous`). Er wählt dann den grösseren
+Taxpunktwert, weil dieser die kleineren Mengen ergibt: lieber eine doppelte
+Verrechnung übersehen als eine behaupten, die es nicht gibt.
 
 ## Was vor einer Veröffentlichung nötig ist
 
-1. **Vollständiger DENTOTAR-Katalog** statt 14 Positionen. Der offizielle
-   Tarif umfasst ein Vielfaches davon; mit 14 Codes ist keine echte Rechnung
-   vollständig prüfbar.
-2. **Klärung der Nutzungsrechte** mit der SSO bzw. über
-   [mtk-ctm.ch](https://www.mtk-ctm.ch). Der Tarif ist ein gepflegtes Werk —
-   ob und wie er in einer App abgebildet werden darf, ist offen und muss vor
-   einer Store-Veröffentlichung geklärt sein.
-3. **Verifikation** der zurückgerechneten Werte gegen die Originalquelle.
-4. **Versionierung**: Tarife ändern sich. Die Datei braucht ein Stand-Datum,
-   und die App muss veraltete Daten kenntlich machen.
+1. **Nutzungsrechte mit der SSO klären.** Ohne das geht nichts weiter — siehe
+   oben. Dieser Punkt entscheidet, ob Smile in dieser Form erscheinen kann.
+2. **Katalog vervollständigen** — erst nach Punkt 1, und auf dem Weg, den die
+   SSO dafür vorsieht.
+3. **Versionierung einführen.** Tarife ändern sich; die geltende Fassung ist
+   seit 01.01.2025 in Kraft. Die Datei braucht ein Stand-Datum, und die App
+   muss veraltete Daten kenntlich machen.
+4. **Die Lücke sichtbar machen.** Mit 14 von 578 Positionen darf ein „keine
+   Abweichung gefunden" nicht wie ein Freispruch aussehen. Fehlende Daten und
+   fehlende Auffälligkeiten sind zwei verschiedene Aussagen.
+
+### Falls die Rechte nicht zu bekommen sind
+
+Es gibt einen Ausweg, der ohne Katalog auskommt: **Rechnungen drucken ihre
+Taxpunkte selbst mit.** Auf der Testrechnung stehen sie in einer eigenen
+Spalte. Der Resolver braucht nur Taxpunkte und Zeilenbetrag — beides steht auf
+dem Papier. Die Referenzdatenbank wäre dann nicht mehr nötig, um zu *rechnen*,
+sondern nur noch, um zu *beurteilen*, ob eine Position zur Behandlung passt.
+Das ist weniger, aber es wäre eine App, die niemandes Rechte berührt.
 
 ## Haltung der App
 
@@ -51,3 +112,11 @@ Abweichungen aufmerksam. Sie stellt **keine** Behauptung über Richtigkeit oder
 Absicht auf. Diese Unterscheidung ist nicht nur juristisch relevant, sondern
 auch für die Akzeptanz bei Zahnärztinnen und Zahnärzten entscheidend — die
 Thesis identifiziert die Anreizstruktur, nicht die Technik, als grösste Hürde.
+
+## Quellen
+
+- [SSO Zahnarzttarif / DENTOTAR](https://www.sso.ch/de/zahnarzttarif)
+- [MTK — Zahnarzttarif SSO (Tarif 222)](https://www.mtk-ctm.ch/de/tarife/zahnarzttarif-sso/)
+- [MTK — Zahnarzttarif UV/MV/IV, Vergleich neu/alt 2018 (PDF)](https://www.mtk-ctm.ch/application/files/3317/6760/4591/ZahnarztTarif_2018_UV-MV-IV_Vergleich_neu-alt.pdf)
+- [Publizierte Tarifübersicht mit Preisspannen (PDF)](https://www.beobachter.ch/sites/default/files/zahnarzttarife.pdf)
+- Klickdummy und Tabelle 3 der MAS-Thesis (Eichmann, ETH Zürich)
