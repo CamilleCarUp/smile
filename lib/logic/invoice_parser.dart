@@ -156,21 +156,51 @@ List<double> numberCandidates(String raw) {
 /// die rechte Spalte um 180 Pixel gegenueber der linken verschiebt. Ein zu
 /// enger Suchbereich ist der schlechtere Fehler -- dann bleibt die Verkantung
 /// unerkannt und die Betraege landen bei der falschen Position.
-double estimateSkew(List<OcrTextLine> lines, {double maxSlope = 0.20}) {
+/// Schaetzt, wie stark das Bild verkantet ist -- und liefert bewusst MEHRERE
+/// Kandidaten statt eines Werts.
+///
+/// Fotografiert jemand eine Rechnung, liegt sie fast nie exakt gerade. Schon
+/// eineinhalb Grad Neigung verschieben die rechte Blattkante gegenueber der
+/// linken um mehr als eine Zeilenhoehe. Dann liegt der Betrag einer Zeile
+/// tiefer als der Tarifcode der naechsten, und die Zeilenbildung ordnet jeden
+/// Betrag der falschen Position zu.
+///
+/// Geschaetzt wird ueber ein Projektionsprofil: Fuer eine Reihe von
+/// Kandidaten-Neigungen werden alle Textstuecke entzerrt und in schmale
+/// Hoehenbaender einsortiert. Bei einer passenden Neigung fallen sie sauber in
+/// wenige, dicht besetzte Baender.
+///
+/// **Warum mehrere Kandidaten:** Eine Rechnung ist ein regelmaessiges Raster.
+/// Verschiebt man die Neigung gerade so weit, dass jede Zeile auf die
+/// naechste faellt, ist das Ergebnis genauso "scharf" -- nur um eine Zeile
+/// versetzt. Aus der Schaerfe allein laesst sich das nicht entscheiden. Auf
+/// einem echten Foto lagen die gleichwertigen Kandidaten 0.031 auseinander,
+/// und der bestbewertete war der falsche: jede Position bekam den Betrag
+/// ihrer Nachbarin.
+///
+/// Entschieden wird deshalb erst in [InvoiceParser.parse], und zwar an einem
+/// Kriterium, das die Rechnung selbst mitbringt: nur bei der richtigen
+/// Ausrichtung ergeben die Zeilenbetraege in Summe das ausgewiesene Total.
+///
+/// [maxSlope] deckt rund elf Grad ab. Das klingt viel, ist es aber nicht: ein
+/// aus der Hand aufgenommenes Foto lag in der Praxis bei neun Grad.
+List<double> skewCandidates(
+  List<OcrTextLine> lines, {
+  double maxSlope = 0.20,
+  int count = 6,
+}) {
   // Bei sehr wenigen Textstuecken ist die Schaetzung nicht belastbar; dann
   // lieber gar nicht entzerren als in die falsche Richtung.
-  if (lines.length < 8) return 0;
+  if (lines.length < 8) return const [0.0];
 
   final heights = lines.map((l) => l.box.height).toList()..sort();
   final medianHeight = heights[heights.length ~/ 2];
   final binWidth = medianHeight <= 0 ? 1.0 : medianHeight / 2;
 
-  var bestSlope = 0.0;
-  var bestScore = -1;
-
   // Feine Schrittweite: bei 0.001 bleibt der Restfehler ueber die Blattbreite
   // unter zwei Pixeln.
   const steps = 200;
+  final scored = <({double slope, int score})>[];
   for (var step = -steps; step <= steps; step++) {
     final slope = maxSlope * step / steps;
     final counts = <int, int>{};
@@ -180,16 +210,33 @@ double estimateSkew(List<OcrTextLine> lines, {double maxSlope = 0.20}) {
       counts[bin] = (counts[bin] ?? 0) + 1;
     }
     var score = 0;
-    for (final count in counts.values) {
-      score += count * count;
+    for (final c in counts.values) {
+      score += c * c;
     }
-    if (score > bestScore || (score == bestScore && slope.abs() < bestSlope.abs())) {
-      bestScore = score;
-      bestSlope = slope;
-    }
+    scored.add((slope: slope, score: score));
   }
-  return bestSlope;
+
+  scored.sort((a, b) {
+    final byScore = b.score.compareTo(a.score);
+    return byScore != 0 ? byScore : a.slope.abs().compareTo(b.slope.abs());
+  });
+
+  // Nur deutlich verschiedene Neigungen aufnehmen -- benachbarte Rasterwerte
+  // beschreiben dieselbe Ausrichtung.
+  final chosen = <double>[];
+  for (final entry in scored) {
+    if (chosen.every((c) => (entry.slope - c).abs() > 0.012)) {
+      chosen.add(entry.slope);
+    }
+    if (chosen.length >= count) break;
+  }
+  return chosen;
 }
+
+/// Die bestbewertete Neigung. Fuer sich genommen nicht ausreichend -- siehe
+/// [skewCandidates] und [InvoiceParser.parse].
+double estimateSkew(List<OcrTextLine> lines, {double maxSlope = 0.20}) =>
+    skewCandidates(lines, maxSlope: maxSlope, count: 1).first;
 
 /// Fasst Textstuecke zu Zeilen zusammen.
 ///
@@ -273,13 +320,47 @@ class InvoiceParser {
     for (final page in pages) {
       allLines.addAll(page.lines);
     }
-    final rows = groupIntoRows(allLines);
+    if (allLines.isEmpty) {
+      return const ParsedInvoice(rows: [], header: ParsedInvoiceHeader());
+    }
 
-    return ParsedInvoice(
-      rows: _extractTariffRows(rows),
-      header: _extractHeader(rows),
-      statedTotal: _extractStatedTotal(rows),
-    );
+    // Mehrere Ausrichtungen der Seite sind rechnerisch gleich plausibel
+    // (siehe [skewCandidates]). Entschieden wird an der Rechnung selbst:
+    // Nur wenn die Zeilenbetraege in Summe das ausgewiesene Total ergeben,
+    // wurden sie der richtigen Position zugeordnet.
+    ParsedInvoice? erste;
+    ParsedInvoice? stimmige;
+
+    for (final slope in skewCandidates(allLines)) {
+      final rows = groupIntoRows(allLines, skew: slope);
+      final invoice = ParsedInvoice(
+        rows: _extractTariffRows(rows),
+        header: _extractHeader(rows),
+        statedTotal: _extractStatedTotal(rows),
+      );
+      erste ??= invoice;
+
+      // Unter den stimmigen gewinnt die mit den meisten Positionen: sonst
+      // koennte eine Ausrichtung gewinnen, bei der nur eine einzige Position
+      // erkannt wird und deren Betrag zufaellig dem Total entspricht.
+      if (_addsUp(invoice) &&
+          (stimmige == null || invoice.rows.length > stimmige.rows.length)) {
+        stimmige = invoice;
+      }
+    }
+
+    // Keine Ausrichtung geht auf? Dann die bestbewertete zurueckgeben -- die
+    // Summenprobe schlaegt spaeter an und das Ergebnis gilt als unsicher.
+    return stimmige ?? erste!;
+  }
+
+  /// Ergeben die Zeilenbetraege in Summe das ausgewiesene Total?
+  bool _addsUp(ParsedInvoice invoice) {
+    final total = invoice.statedTotal?.best;
+    if (total == null || invoice.rows.isEmpty) return false;
+    final sum = invoice.rows
+        .fold(0.0, (s, r) => s + (r.rightmostNumber?.best ?? 0));
+    return (sum - total).abs() <= 0.05;
   }
 
   /// Nur Zeilen mit Tarifcode zaehlen als Rechnungsposition.

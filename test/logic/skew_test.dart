@@ -175,6 +175,53 @@ void main() {
     });
   });
 
+  group('Neun Grad — mehrere Ausrichtungen sind gleich plausibel', () {
+    // Drittes Gerätefoto. Hier fand die App zwar alle fünf Positionen, wies
+    // aber jeder den Betrag ihrer Nachbarin zu; die letzte bekam sogar das
+    // Rechnungstotal. Ursache ist grundsätzlich: Eine Rechnung ist ein
+    // regelmässiges Raster. Verschiebt man die Neigung gerade so weit, dass
+    // jede Zeile auf die nächste fällt, ist das Ergebnis genauso "scharf".
+    // Aus der Schärfe allein lässt sich das nicht entscheiden — hier lagen
+    // die gleichwertigen Kandidaten 0.031 auseinander, und der bestbewertete
+    // war der falsche.
+    late List<OcrPage> pages;
+
+    setUp(() => pages = _fixture('ocr_kostenvoranschlag_zeilenversatz.json'));
+
+    test('das Projektionsprofil allein wählt die falsche Ausrichtung', () {
+      // Der Nachweis, dass die Summenprobe als Entscheider nötig ist.
+      final rows = groupIntoRows(pages.single.lines, skew: estimateSkew(pages.single.lines));
+      final zeile = rows.firstWhere((r) => r.any((c) => c.text.startsWith('4.0020')));
+      expect(zeile.map((c) => c.text), isNot(contains('39.70')),
+          reason: 'Die bestbewertete Neigung ordnet den Betrag der falschen Position zu.');
+    });
+
+    test('mehrere Kandidaten werden angeboten', () {
+      final kandidaten = skewCandidates(pages.single.lines);
+      expect(kandidaten.length, greaterThan(1));
+      expect(kandidaten.any((s) => (s - 0.157).abs() < 0.012), isTrue,
+          reason: 'Die richtige Neigung muss unter den Kandidaten sein.');
+    });
+
+    test('die Summenprobe wählt die richtige Ausrichtung', () {
+      final invoice = const InvoiceParser().parse(pages);
+      expect(invoice.rows.map((r) => r.code).toList(),
+          ['4.0020', '4.0650', '4.5350', '4.5800', '4.5810']);
+      expect(invoice.rows.map((r) => r.rightmostNumber?.best).toList(),
+          [39.70, 92.20, 146.40, 23.05, 18.85]);
+      expect(invoice.statedTotal?.best, 320.20);
+    });
+
+    test('die vollständige Auswertung geht auf', () {
+      final result = analyzeInvoice(pages, _catalog());
+      expect(result.factor, 1.20);
+      expect(result.lines.map((l) => l.quantity).toList(), [1, 2, 1, 1, 1]);
+      expect(result.invoiceTotal, closeTo(320.20, 0.01));
+      expect(result.totalsMatch, isTrue);
+      expect(result.isTrustworthy, isTrue);
+    });
+  });
+
   group('Gerade aufgenommene Rechnung', () {
     test('bleibt von der Entzerrung unberührt', () {
       final pages = _fixture('ocr_kostenvoranschlag.json');
