@@ -139,12 +139,14 @@ class OcrDebugScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   ElevatedButton(
-                    onPressed: () {
-                      uploadController.processUpload();
-                      Navigator.push(
-                          context, MaterialPageRoute(builder: (_) => const SummaryScreen()));
+                    onPressed: () async {
+                      await uploadController.processUpload();
+                      if (context.mounted) {
+                        Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => const SummaryScreen()));
+                      }
                     },
-                    child: const Text('Weiter zur Demo-Auswertung'),
+                    child: const Text('Rechnung auswerten'),
                   ),
                 ],
               ),

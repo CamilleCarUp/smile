@@ -68,12 +68,21 @@ void main() {
       expect(file.recognizedText, contains('Fehler bei der Texterkennung'));
     });
 
-    test('processUpload erstellt eine Anfrage mit den hochgeladenen Dateien', () {
+    test('processUpload erstellt eine Anfrage mit den hochgeladenen Dateien', () async {
       uploadController.addUploadedFile('Rechnung_Test.pdf');
-      final req = uploadController.processUpload();
+      final req = await uploadController.processUpload();
 
       expect(req.filename, contains('Rechnung_Test.pdf'));
       expect(req.lines, isNotEmpty);
+    });
+
+    test('ohne Erkennungsdaten greift die Demo-Auswertung', () async {
+      uploadController.addUploadedFile('Rechnung_Test.pdf');
+      final req = await uploadController.processUpload();
+
+      // Erkennbar an der markierten Position aus dem Klickdummy.
+      expect(req.flaggedLines, hasLength(1));
+      expect(req.flaggedLines.single.code, '4.0650');
     });
   });
 }

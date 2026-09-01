@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../data/tariff_repository.dart';
 import '../logic/invoice_matcher.dart';
 import '../models/ocr_result.dart';
 import '../models/request.dart';
@@ -47,14 +48,28 @@ class UploadController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Erstellt aus den aktuell hochgeladenen Dateien eine neue Anfrage im
-  /// [requestsRepository]. Nutzt noch die Demo-Analyse aus
-  /// logic/invoice_matcher.dart -- Phase 2 ersetzt nur deren Innenleben.
-  DentalRequest processUpload() {
-    if (currentUploadFiles.isEmpty) {
-      currentUploadFiles.add(UploadedFile('Rechnung_Seite1.pdf'));
+  /// Wertet die hochgeladenen Dateien aus und legt daraus eine Anfrage an.
+  ///
+  /// Liegen Erkennungsdaten vor, laeuft die echte Auswertung: Tabellen-
+  /// rekonstruktion, Tarifcodes, Betraege, Mengen, Summenprobe. Nur wenn gar
+  /// keine Erkennung vorliegt (etwa beim Durchklicken ohne Foto), greift die
+  /// Demo-Auswertung aus dem Klickdummy.
+  Future<DentalRequest> processUpload() async {
+    final pages = currentUploadFiles
+        .map((f) => f.ocrPage)
+        .whereType<OcrPage>()
+        .toList();
+
+    final InvoiceAnalysisResult analysis;
+    if (pages.isEmpty) {
+      if (currentUploadFiles.isEmpty) {
+        currentUploadFiles.add(UploadedFile('Rechnung_Seite1.pdf'));
+      }
+      analysis = analyzeInvoiceDemo();
+    } else {
+      analysis = analyzeInvoice(pages, await tariffRepository.load());
     }
-    final analysis = analyzeInvoiceDemo();
+
     final req = requestsRepository.createFromAnalysis(
       files: List.of(currentUploadFiles),
       analysis: analysis,

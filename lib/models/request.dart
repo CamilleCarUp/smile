@@ -26,12 +26,28 @@ class TariffLine {
   final double amountChf;
   final bool flagged;
 
+  /// Zurueckgerechnete Anzahl. Null, wenn die Position nicht aufgeschluesselt
+  /// werden konnte — dann zeigt die App bewusst nichts an, statt zu raten.
+  final int? quantity;
+
+  /// Verwendete Taxpunkte. Null, wenn nicht bestimmbar.
+  final double? taxpunkte;
+
+  /// Kamen die Taxpunkte aus der Referenzdatenbank (sicherer) oder von der
+  /// Rechnung selbst?
+  final bool taxpunkteFromCatalog;
+
   const TariffLine({
     required this.code,
     required this.description,
     required this.amountChf,
     this.flagged = false,
+    this.quantity,
+    this.taxpunkte,
+    this.taxpunkteFromCatalog = false,
   });
+
+  bool get isResolved => quantity != null && taxpunkte != null;
 }
 
 class DentalRequest {
@@ -47,6 +63,26 @@ class DentalRequest {
   double invoiceTotal;
   double referenceTotal;
 
+  /// E-Mail der Praxis, falls auf der Rechnung gefunden. Damit laesst sich die
+  /// Rueckfrage tatsaechlich adressieren, statt den Nutzer die Adresse selbst
+  /// heraussuchen zu lassen.
+  String? dentistEmail;
+
+  /// Ermittelter Faktor zwischen Taxpunkten und Franken.
+  /// Nicht als "Taxpunktwert der Praxis" beschriften: fuer Privatpatienten
+  /// sind die Taxpunkte selbst eine Spanne, erst darauf wirkt der
+  /// Taxpunktwert. Was hier steht, ist beides zusammen.
+  double? factor;
+
+  /// Auf der Rechnung ausgewiesenes Total, falls gefunden.
+  double? statedTotal;
+
+  /// Ging die Summenprobe auf?
+  bool totalsMatch;
+
+  /// Durfte die App aus diesem Ergebnis ueberhaupt eine Aussage ableiten?
+  bool isTrustworthy;
+
   DentalRequest({
     required this.id,
     required this.filename,
@@ -59,9 +95,15 @@ class DentalRequest {
     required this.lines,
     required this.invoiceTotal,
     required this.referenceTotal,
+    this.dentistEmail,
+    this.factor,
+    this.statedTotal,
+    this.totalsMatch = false,
+    this.isTrustworthy = false,
   });
 
   List<TariffLine> get flaggedLines => lines.where((l) => l.flagged).toList();
+  List<TariffLine> get unresolvedLines => lines.where((l) => !l.isResolved).toList();
   double get difference => invoiceTotal - referenceTotal;
 }
 

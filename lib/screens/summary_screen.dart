@@ -22,13 +22,18 @@ class SummaryScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Zahnarztadresse:', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.slate800)),
-                  const SizedBox(height: 4),
-                  Text('${req.dentistName}\n${req.dentistAddress}',
-                      style: const TextStyle(color: AppColors.slate800)),
-                  const SizedBox(height: 16),
-                  const Text('Einflächige Kompositfüllung',
+                  const Text('Zahnarztadresse:',
                       style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.slate800)),
+                  const SizedBox(height: 4),
+                  Text(
+                    [req.dentistName, req.dentistAddress, req.dentistEmail]
+                        .where((e) => e != null && e.isNotEmpty)
+                        .join('\n'),
+                    style: const TextStyle(color: AppColors.slate800),
+                  ),
+                  const SizedBox(height: 16),
+                  Text('Rechnung Nr. ${req.invoiceNumber}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.slate800)),
                   const SizedBox(height: 8),
                   for (final l in req.lines)
                     Padding(
@@ -37,6 +42,11 @@ class SummaryScreen extends StatelessWidget {
                         children: [
                           SizedBox(width: 48, child: Text(l.code, style: const TextStyle(fontSize: 12))),
                           Expanded(child: Text(l.description, style: const TextStyle(fontSize: 12))),
+                          if (l.quantity != null && l.quantity! > 1)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: Text('${l.quantity}×', style: const TextStyle(fontSize: 12)),
+                            ),
                           Text('CHF ${l.amountChf.toStringAsFixed(2)}', style: const TextStyle(fontSize: 12)),
                         ],
                       ),

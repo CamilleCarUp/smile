@@ -17,17 +17,33 @@ class RequestsRepository extends ChangeNotifier {
   }) {
     final primaryName = files.first.name;
     final suffix = files.length > 1 ? ' (+${files.length - 1})' : '';
+    final header = analysis.header;
+
+    // Ohne Kopfdaten liegt eine Demo-Auswertung vor -- dann die Werte aus dem
+    // Klickdummy. Bei einer echten Rechnung wird uebernommen, was gelesen
+    // wurde; was fehlt, wird als fehlend benannt statt erfunden.
     final req = DentalRequest(
       id: DateTime.now().millisecondsSinceEpoch,
       filename: '$primaryName$suffix',
       files: files,
-      invoiceNumber: (_nextInvoiceCounter++).toString(),
-      dentistName: 'Dr. med. dent. Max Muster',
-      dentistAddress: 'Alte Gasse 13, 8005 Zürich',
-      date: DateTime.now(),
+      invoiceNumber: header == null
+          ? (_nextInvoiceCounter++).toString()
+          : (header.invoiceNumber ?? (_nextInvoiceCounter++).toString()),
+      dentistName: header == null
+          ? 'Dr. med. dent. Max Muster'
+          : (header.dentistName ?? 'Praxis nicht erkannt'),
+      dentistAddress: header == null
+          ? 'Alte Gasse 13, 8005 Zürich'
+          : (header.dentistAddress ?? ''),
+      date: header?.date ?? DateTime.now(),
       lines: analysis.lines,
       invoiceTotal: analysis.invoiceTotal,
       referenceTotal: analysis.referenceTotal,
+      dentistEmail: header?.dentistEmail,
+      factor: analysis.factor,
+      statedTotal: analysis.statedTotal,
+      totalsMatch: analysis.totalsMatch,
+      isTrustworthy: analysis.isTrustworthy,
     );
     requests.insert(0, req);
     currentRequest = req;
