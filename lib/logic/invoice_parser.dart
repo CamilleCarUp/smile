@@ -150,7 +150,13 @@ List<double> numberCandidates(String raw) {
 /// Hoehenbaender einsortiert. Bei der richtigen Neigung fallen sie am
 /// saubersten in wenige, dicht besetzte Baender -- also dorthin, wo die Summe
 /// der quadrierten Belegungen am groessten ist.
-double estimateSkew(List<OcrTextLine> lines, {double maxSlope = 0.06}) {
+///
+/// [maxSlope] deckt rund elf Grad ab. Das klingt viel, ist es aber nicht:
+/// Ein aus der Hand aufgenommenes Foto lag in der Praxis bei acht Grad, was
+/// die rechte Spalte um 180 Pixel gegenueber der linken verschiebt. Ein zu
+/// enger Suchbereich ist der schlechtere Fehler -- dann bleibt die Verkantung
+/// unerkannt und die Betraege landen bei der falschen Position.
+double estimateSkew(List<OcrTextLine> lines, {double maxSlope = 0.20}) {
   // Bei sehr wenigen Textstuecken ist die Schaetzung nicht belastbar; dann
   // lieber gar nicht entzerren als in die falsche Richtung.
   if (lines.length < 8) return 0;
@@ -162,8 +168,11 @@ double estimateSkew(List<OcrTextLine> lines, {double maxSlope = 0.06}) {
   var bestSlope = 0.0;
   var bestScore = -1;
 
-  for (var step = -60; step <= 60; step++) {
-    final slope = maxSlope * step / 60;
+  // Feine Schrittweite: bei 0.001 bleibt der Restfehler ueber die Blattbreite
+  // unter zwei Pixeln.
+  const steps = 200;
+  for (var step = -steps; step <= steps; step++) {
+    final slope = maxSlope * step / steps;
     final counts = <int, int>{};
     for (final line in lines) {
       final corrected = line.box.centerY - slope * line.box.centerX;
@@ -252,7 +261,7 @@ List<List<OcrTextLine>> groupIntoRows(
 
 // --- Parser -----------------------------------------------------------------
 
-final RegExp _tariffCode = RegExp(r'\b(\d\.\d{4})\b');
+final RegExp _tariffCode = RegExp(r'\b(\d[.,]\d{4})\b');
 final RegExp _email = RegExp(r'[\w.+-]+@[\w-]+\.[\w.-]+');
 final RegExp _looksNumeric = RegExp(r'^[\s\d.,]*\d[\s\d.,]*(CHF|CHE|GHF|Fr\.?)?\s*$', caseSensitive: false);
 
@@ -283,18 +292,23 @@ class InvoiceParser {
 
     for (final row in rows) {
       OcrTextLine? codeCell;
-      String? code;
+      String? rawCode;
       for (final cell in row) {
         final match = _tariffCode.firstMatch(cell.text);
         if (match != null) {
           codeCell = cell;
-          code = match.group(1);
+          rawCode = match.group(1);
           break;
         }
       }
-      if (code == null || codeCell == null) continue;
+      if (rawCode == null || codeCell == null) continue;
 
-      final description = codeCell.text.replaceFirst(code, '').trim();
+      // Die Erkennung liest den Punkt im Tarifcode gelegentlich als Komma
+      // ("4,0020"). Verglichen wird mit der Schreibweise des Tarifs, aus der
+      // Bezeichnung entfernt wird aber der tatsaechlich gelesene Text.
+      // Ohne das faellt die betroffene Position komplett aus der Erfassung.
+      final code = rawCode.replaceAll(',', '.');
+      final description = codeCell.text.replaceFirst(rawCode, '').trim();
 
       final numbers = <NumberField>[];
       for (final cell in row) {

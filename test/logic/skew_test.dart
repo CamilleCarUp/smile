@@ -121,6 +121,60 @@ void main() {
     });
   });
 
+  group('Stark verkantetes Foto (rund acht Grad)', () {
+    // Zweites Gerätefoto, deutlich schiefer als das erste. Die App fand nur
+    // zwei Positionen und wies beiden den Betrag einer anderen zu. Zwei
+    // Ursachen: die Neigung lag mit 0.137 weit ausserhalb des damaligen
+    // Suchbereichs von 0.06, und die Texterkennung las den Punkt im ersten
+    // Tarifcode als Komma ("4,0020"), wodurch die Position ganz durchfiel.
+    late List<OcrPage> pages;
+
+    setUp(() => pages = _fixture('ocr_kostenvoranschlag_stark_verkantet.json'));
+
+    test('die starke Verkantung wird erkannt', () {
+      final skew = estimateSkew(pages.single.lines);
+      expect(skew, closeTo(0.137, 0.015),
+          reason: 'Rund 180 Pixel Versatz über die Blattbreite');
+    });
+
+    test('ein Tarifcode mit Komma wird trotzdem gefunden', () {
+      final invoice = const InvoiceParser().parse(pages);
+      expect(invoice.rows.map((r) => r.code), contains('4.0020'),
+          reason: 'Auf dem Papier steht "4,0020" — normalisiert wird auf die '
+              'Schreibweise des Tarifs.');
+      expect(invoice.rows.firstWhere((r) => r.code == '4.0020').description,
+          'Kurzbefundaufnahme',
+          reason: 'Aus der Bezeichnung muss der tatsächlich gelesene Text weg, '
+              'nicht der normalisierte.');
+    });
+
+    test('alle fünf Positionen behalten ihren eigenen Betrag', () {
+      final invoice = const InvoiceParser().parse(pages);
+      expect(invoice.rows.map((r) => r.code).toList(),
+          ['4.0020', '4.0650', '4.5350', '4.5800', '4.5810']);
+      expect(invoice.rows.map((r) => r.rightmostNumber?.best).toList(),
+          [39.70, 92.20, 146.40, 23.05, 18.85]);
+    });
+
+    test('die vollständige Auswertung geht auf', () {
+      final result = analyzeInvoice(pages, _catalog());
+      expect(result.factor, 1.20);
+      expect(result.lines.map((l) => l.quantity).toList(), [1, 2, 1, 1, 1]);
+      expect(result.invoiceTotal, closeTo(320.20, 0.01));
+      expect(result.totalsMatch, isTrue);
+      expect(result.isTrustworthy, isTrue);
+      expect(result.findings, isEmpty);
+    });
+
+    test('ohne ausreichenden Suchbereich bleibt die Verkantung unerkannt', () {
+      // Der Nachweis, dass der weite Suchbereich nötig ist. Mit dem alten
+      // Grenzwert 0.06 wird die tatsächliche Neigung von 0.137 nie gefunden.
+      final zuEng = estimateSkew(pages.single.lines, maxSlope: 0.06);
+      expect(zuEng.abs(), lessThan(0.06));
+      expect((zuEng - 0.137).abs(), greaterThan(0.05));
+    });
+  });
+
   group('Gerade aufgenommene Rechnung', () {
     test('bleibt von der Entzerrung unberührt', () {
       final pages = _fixture('ocr_kostenvoranschlag.json');
