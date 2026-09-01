@@ -45,6 +45,7 @@ class RequestsRepository extends ChangeNotifier {
       totalsMatch: analysis.totalsMatch,
       isTrustworthy: analysis.isTrustworthy,
       findings: analysis.findings,
+      wasPhotographedCrooked: analysis.wasPhotographedCrooked,
     );
     requests.insert(0, req);
     currentRequest = req;

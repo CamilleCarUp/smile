@@ -222,6 +222,28 @@ void main() {
     });
   });
 
+  group('Schiefe Aufnahme wird als solche gemeldet', () {
+    test('das stark verkantete Foto gilt als schief', () {
+      final invoice = const InvoiceParser()
+          .parse(_fixture('ocr_kostenvoranschlag_stark_verkantet.json'));
+      expect(invoice.wasPhotographedCrooked, isTrue);
+    });
+
+    test('die gerade Aufnahme gilt nicht als schief', () {
+      final invoice =
+          const InvoiceParser().parse(_fixture('ocr_kostenvoranschlag.json'));
+      expect(invoice.wasPhotographedCrooked, isFalse);
+    });
+
+    test('die Meldung erreicht die Auswertung', () {
+      final result = analyzeInvoice(
+          _fixture('ocr_kostenvoranschlag_zeilenversatz.json'), _catalog());
+      expect(result.wasPhotographedCrooked, isTrue,
+          reason: 'Auch wenn die Lesung gelingt, bleibt die Aufnahme schief — '
+              'der Hinweis erscheint nur, wenn das Ergebnis unsicher ist.');
+    });
+  });
+
   group('Gerade aufgenommene Rechnung', () {
     test('bleibt von der Entzerrung unberührt', () {
       final pages = _fixture('ocr_kostenvoranschlag.json');

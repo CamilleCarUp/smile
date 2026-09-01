@@ -4,7 +4,9 @@ import '../models/request.dart';
 import '../state/requests_repository.dart';
 import '../theme/app_theme.dart';
 import '../widgets/smile_app_bar.dart';
+import '../state/upload_controller.dart';
 import 'request_screen.dart';
+import 'upload_screen.dart';
 
 /// Zeigt, was die App aus der Rechnung lesen konnte.
 ///
@@ -26,6 +28,10 @@ class ResultsScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
+            if (!req.isTrustworthy) ...[
+              _UnsicherKarte(request: req),
+              const SizedBox(height: 16),
+            ],
             for (final f in req.findings) _BefundKarte(finding: f),
             if (req.findings.isNotEmpty) const SizedBox(height: 16),
             _LesestatusKarte(
@@ -96,11 +102,22 @@ class ResultsScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () =>
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const RequestScreen())),
-              child: const Text('Rückfrage vorbereiten'),
-            ),
+            if (req.isTrustworthy)
+              ElevatedButton(
+                onPressed: () => Navigator.push(
+                    context, MaterialPageRoute(builder: (_) => const RequestScreen())),
+                child: const Text('Rückfrage vorbereiten'),
+              )
+            else
+              // Die neue Aufnahme steht oben in der Unsicher-Karte, direkt bei
+              // der Begruendung. Hier unten bleibt nur die Nebenhandlung --
+              // wer trotzdem fragen will, muss erst an allem vorbei, worauf
+              // er sich gerade nicht verlassen soll.
+              OutlinedButton(
+                onPressed: () => Navigator.push(
+                    context, MaterialPageRoute(builder: (_) => const RequestScreen())),
+                child: const Text('Trotzdem Rückfrage vorbereiten'),
+              ),
           ],
         ),
       ),
@@ -342,6 +359,102 @@ class _BefundKarte extends StatelessWidget {
               ],
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+
+/// Wird gezeigt, wenn die Rechnung nicht sicher gelesen werden konnte.
+///
+/// Die Hinweise sind bewusst konkret: "Bild zu unscharf" hilft niemandem
+/// weiter. Was die App aus dem Fehlerbild ableiten kann, sagt sie auch.
+class _UnsicherKarte extends StatelessWidget {
+  final DentalRequest request;
+  const _UnsicherKarte({required this.request});
+
+  List<String> get _tipps {
+    final tipps = <String>[];
+    if (request.wasPhotographedCrooked) {
+      // Bewusst ohne Gradzahl: "9 Grad" sagt niemandem etwas, "schief" schon.
+      tipps.add('Das Bild wurde schief aufgenommen. Leg das Blatt flach hin und '
+          'halte die Kamera gerade darüber — dann stehen die Spalten sauber '
+          'nebeneinander.');
+    }
+    if (!request.totalsMatch) {
+      tipps.add('Achte darauf, dass die ganze Leistungsaufstellung im Bild ist — '
+          'inklusive der Totalzeile ganz unten.');
+    }
+    if (request.unresolvedLines.isNotEmpty && !request.wasPhotographedCrooked) {
+      tipps.add('Achte auf gutes, gleichmässiges Licht ohne Schatten auf dem Blatt.');
+    }
+    tipps.add('Am zuverlässigsten ist der direkte PDF-Import — dabei entfällt das '
+        'Fotografieren ganz.');
+    return tipps;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.slate50,
+        border: Border.all(color: AppColors.slate300),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              Icon(Icons.image_search_outlined, size: 18, color: AppColors.slate600),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text('Diese Rechnung konnte nicht sicher gelesen werden',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Die Zahlen unten stammen aus dieser Rechnung, könnten aber der falschen '
+            'Position zugeordnet sein. Verlass dich nicht darauf — eine neue Aufnahme '
+            'ist schnell gemacht.',
+            style: TextStyle(fontSize: 12, color: AppColors.slate700, height: 1.45),
+          ),
+          const SizedBox(height: 12),
+          for (final tipp in _tipps)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('•  ', style: TextStyle(color: AppColors.slate400)),
+                  Expanded(
+                    child: Text(tipp,
+                        style: const TextStyle(
+                            fontSize: 12, color: AppColors.slate600, height: 1.4)),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.photo_camera_outlined, size: 18),
+              label: const Text('Rechnung neu aufnehmen'),
+              onPressed: () {
+                uploadController.reset();
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const UploadScreen()),
+                  (route) => route.isFirst,
+                );
+              },
+            ),
+          ),
         ],
       ),
     );

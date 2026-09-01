@@ -28,6 +28,9 @@ class InvoiceAnalysisResult {
   /// Kopfdaten der Rechnung, falls gelesen.
   final ParsedInvoiceHeader? header;
 
+  /// Wurde die Rechnung erkennbar schief aufgenommen?
+  final bool wasPhotographedCrooked;
+
   /// Belegbare Befunde. Leer heisst NICHT "alles in Ordnung", sondern
   /// "nichts, was die App belegen kann" — ein wichtiger Unterschied, den die
   /// Anzeige nicht verwischen darf.
@@ -43,6 +46,7 @@ class InvoiceAnalysisResult {
     this.isTrustworthy = false,
     this.header,
     this.findings = const [],
+    this.wasPhotographedCrooked = false,
   });
 
   double get difference => invoiceTotal - referenceTotal;
@@ -91,6 +95,7 @@ InvoiceAnalysisResult analyzeInvoice(List<OcrPage> pages, TariffCatalog catalog)
     isTrustworthy: resolved.isTrustworthy,
     header: parsed.header,
     findings: findings,
+    wasPhotographedCrooked: parsed.wasPhotographedCrooked,
   );
 }
 

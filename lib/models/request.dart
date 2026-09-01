@@ -87,6 +87,10 @@ class DentalRequest {
   /// Belegbare Befunde zur Rechnung.
   List<InvoiceFinding> findings;
 
+  /// Wurde die Rechnung erkennbar schief aufgenommen? Der haeufigste Grund
+  /// dafuer, dass eine Lesung nicht aufgeht.
+  bool wasPhotographedCrooked;
+
   DentalRequest({
     required this.id,
     required this.filename,
@@ -105,6 +109,7 @@ class DentalRequest {
     this.totalsMatch = false,
     this.isTrustworthy = false,
     this.findings = const [],
+    this.wasPhotographedCrooked = false,
   });
 
   List<TariffLine> get flaggedLines => lines.where((l) => l.flagged).toList();

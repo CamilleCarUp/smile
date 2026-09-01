@@ -76,9 +76,17 @@ class ParsedInvoiceHeader {
   });
 }
 
+/// Ab dieser Neigung gilt eine Aufnahme als sichtbar schief -- rund drei
+/// Grad. Darunter faellt es niemandem auf und die Entzerrung erledigt es
+/// stillschweigend.
+const double noticeableSkew = 0.05;
+
 class ParsedInvoice {
   final List<ParsedTariffRow> rows;
   final ParsedInvoiceHeader header;
+
+  /// Die Verkantung, mit der die Seite gelesen wurde.
+  final double skew;
 
   /// Das auf der Rechnung ausgewiesene Total, falls gefunden. Dient als
   /// Gegenprobe fuer die Einzelbetraege.
@@ -88,9 +96,13 @@ class ParsedInvoice {
     required this.rows,
     required this.header,
     this.statedTotal,
+    this.skew = 0,
   });
 
   bool get isEmpty => rows.isEmpty;
+
+  /// Wurde die Rechnung erkennbar schief aufgenommen?
+  bool get wasPhotographedCrooked => skew.abs() >= noticeableSkew;
 }
 
 // --- Zahlen -----------------------------------------------------------------
@@ -337,6 +349,7 @@ class InvoiceParser {
         rows: _extractTariffRows(rows),
         header: _extractHeader(rows),
         statedTotal: _extractStatedTotal(rows),
+        skew: slope,
       );
       erste ??= invoice;
 

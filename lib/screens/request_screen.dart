@@ -37,8 +37,12 @@ class RequestScreen extends StatelessWidget {
         'Erläuterung der aufgeführten Positionen.';
   }
 
+  /// Positionen werden nur aufgezaehlt, wenn die Rechnung sicher gelesen
+  /// wurde. Sonst stuenden dort womoeglich Positionen, die der Praxis gar
+  /// nicht zuzuordnen sind -- eine Rueckfrage mit falschen Angaben ist
+  /// schlimmer als eine allgemeine.
   List<TariffLine> _positionen(DentalRequest req) =>
-      req.flaggedLines.isNotEmpty ? req.flaggedLines : req.unresolvedLines;
+      req.isTrustworthy ? req.flaggedLines : const [];
 
   String _mailText(DentalRequest req) {
     final positionen = _positionen(req);
@@ -101,7 +105,16 @@ class RequestScreen extends StatelessWidget {
                           text: 'Auf der Rechnung wurde keine E-Mail-Adresse gefunden. '
                               'Die Adresse musst du in deiner Mail-App noch eintragen.',
                         ),
-                      if (positionen.isEmpty && req.flaggedLines.isEmpty) ...[
+                      if (!req.isTrustworthy) ...[
+                        const SizedBox(height: 12),
+                        const _Empfaenger(
+                          icon: Icons.warning_amber_rounded,
+                          warnung: true,
+                          text: 'Die Rechnung konnte nicht sicher gelesen werden. Der Entwurf '
+                              'nennt deshalb bewusst keine einzelnen Positionen — sie könnten '
+                              'falsch zugeordnet sein. Besser wäre eine neue Aufnahme.',
+                        ),
+                      ] else if (positionen.isEmpty) ...[
                         const SizedBox(height: 12),
                         const _Empfaenger(
                           icon: Icons.info_outline_rounded,
