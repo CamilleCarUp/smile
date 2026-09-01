@@ -21,6 +21,11 @@ class RequestScreen extends StatelessWidget {
   String _anrede(DentalRequest req) => 'Sehr geehrte Damen und Herren';
 
   String _grund(DentalRequest req) {
+    if (req.findings.isNotEmpty) {
+      final f = req.findings.first;
+      return '${f.explanation}\n\n'
+          'Könnten Sie mir erläutern, wie der Betrag zustande kommt?';
+    }
     final flagged = req.flaggedLines;
     if (flagged.isNotEmpty) {
       final l = flagged.first;

@@ -1,3 +1,4 @@
+import 'finding.dart';
 import 'ocr_result.dart';
 
 enum RequestStatus { captured, sent, completed }
@@ -83,6 +84,9 @@ class DentalRequest {
   /// Durfte die App aus diesem Ergebnis ueberhaupt eine Aussage ableiten?
   bool isTrustworthy;
 
+  /// Belegbare Befunde zur Rechnung.
+  List<InvoiceFinding> findings;
+
   DentalRequest({
     required this.id,
     required this.filename,
@@ -100,6 +104,7 @@ class DentalRequest {
     this.statedTotal,
     this.totalsMatch = false,
     this.isTrustworthy = false,
+    this.findings = const [],
   });
 
   List<TariffLine> get flaggedLines => lines.where((l) => l.flagged).toList();

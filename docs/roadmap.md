@@ -33,11 +33,50 @@ Schritte:
 Alles davon steckt in `lib/logic/invoice_matcher.dart` — Screens und Tests
 bleiben unangetastet.
 
-## Phase 3 — Abgleich & Bewertung
-Verfeinerung der Auffälligkeits-Erkennung: Mehrfachverrechnung, Positionen
-ausserhalb des typischen Behandlungsmusters, ungewöhnlicher Taxpunktwert.
-Wichtig: **keine Verdachtsäusserung, sondern eine Rückfrage.** Die App stellt
-fest, was vom Referenzmuster abweicht — sie unterstellt keine Absicht.
+## Phase 3 — Bewertung
+
+Grundsatz: **keine Verdachtsäusserung, sondern eine Rückfrage.** Die App stellt
+fest, was sie belegen kann — sie unterstellt keine Absicht. Die beiden Fehler
+sind nicht gleich teuer: Eine übersehene Doppelverrechnung kostet ein paar
+Franken, ein Fehlalarm schickt jemanden mit einem unbegründeten Vorwurf zu
+seinem Zahnarzt.
+
+### Regel 1 — Preisniveau über dem tariflichen Höchstsatz ✅
+
+Gebaut. Rein rechnerisch belegbar, ohne zahnmedizinisches Urteil: Der Tarif
+begrenzt für Privatpatienten die Taxpunkte auf das 1.15-fache (`TP (PP) max`)
+und den Taxpunktwert auf 1.70. Mehr als rund das **1.97-fache** der Taxpunkte
+lässt er nicht zu.
+
+Beim Bauen zeigte sich eine strukturelle Hürde: Halbiert man den Faktor und
+verdoppelt alle Mengen, passt jede Rechnung rechnerisch genauso gut. Da jeder
+Faktor über 1.70 halbiert noch über der Untergrenze 0.85 liegt, wäre **jede**
+überteuerte Rechnung mehrdeutig — und die Regel könnte nie auslösen. Gelöst
+über die Mengenspalte: Rechnungen drucken ihre Anzahl mit, und die widerlegt
+die konkurrierende Lesart. Fehlt sie, bleibt es mehrdeutig und die App
+schweigt.
+
+### Regel 2 — Menge über dem Behandlungsmuster ⏳ OFFEN
+
+**Das ist der Fall aus der Thesis** (Infiltrationsanästhesie zweimal bei einer
+einflächigen Füllung) und der eigentliche Kern des ursprünglichen Konzepts.
+
+Was schon da ist: Der Resolver ermittelt die Mengen zuverlässig — auf der
+Testrechnung erkennt er die zweifache Anästhesie korrekt, auch ohne
+Referenzdatenbank.
+
+**Was fehlt: die erwarteten Mengen je Behandlungsmuster.** Die Referenzdatei
+listet zu jedem Muster die Codes, aber nicht, wie oft jeder davon vorgesehen
+ist. Diese Zahlen dürfen nicht geschätzt werden — sie müssen aus der Thesis
+oder von zahnmedizinischer Seite kommen.
+
+Voraussetzungen, bevor gebaut wird:
+1. Erwartete Mengen je Muster, belastbar belegt
+2. Geklärte Nutzungsrechte am Tarif (siehe [tarifdaten.md](tarifdaten.md))
+
+Der Platz im Code ist markiert: `lib/logic/invoice_rules.dart`, unterhalb von
+Regel 1. Die Markierung erklärt dort auch, warum die Regel absichtlich fehlt —
+damit sie niemand versehentlich als Versäumnis „repariert".
 
 ## Phase 4 — Rückfrage an die Praxis ✅ (Grundfunktion)
 Automatisch erzeugter, höflich formulierter E-Mail-Entwurf über die Mail-App

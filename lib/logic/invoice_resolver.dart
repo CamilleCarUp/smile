@@ -166,16 +166,20 @@ class ResolvedInvoice {
 }
 
 class InvoiceResolver {
-  /// Zulaessiger Bereich fuer den Faktor Taxpunkte -> Franken.
+  /// Suchbereich fuer den Faktor Taxpunkte -> Franken.
   ///
-  /// Die Obergrenze 1.70 ist keine Schaetzung: Die SSO begrenzt den
-  /// Taxpunktwert fuer Privatpatienten nach oben auf diesen Wert. Nach unten
-  /// ist er frei; publizierte Preisspannen entsprechen einem Band von rund
-  /// 0.85 bis 1.15, weshalb 0.85 als praktische Untergrenze dient.
+  /// Wichtig: Das ist die Grenze des **technisch Moeglichen**, nicht des
+  /// rechtlich Zulaessigen. Der Tarif laesst hoechstens rund das 1.97-fache
+  /// zu — wuerde hier bei diesem Wert abgeschnitten, koennte eine Rechnung
+  /// oberhalb davon nie erkannt werden: sie waere schlicht "nicht lesbar"
+  /// statt "ueber dem Hoechstsatz". Die Beurteilung macht deshalb
+  /// logic/invoice_rules.dart, nicht der Resolver.
   ///
-  /// Der Bereich umfasst damit genau den Faktor 2 (0.85 × 2 = 1.70). Zum
-  /// halben Wert mit doppelten Mengen passt eine Rechnung deshalb rechnerisch
-  /// immer genauso gut — siehe [ResolverWarning.taxpunktwertAmbiguous].
+  /// Nach unten ist der Taxpunktwert frei; publizierte Preisspannen
+  /// entsprechen einem Band ab rund 0.85, was als praktische Untergrenze
+  /// dient. Weil der Bereich mehr als den Faktor 2 umfasst, passt zum halben
+  /// Wert mit doppelten Mengen eine Rechnung rechnerisch genauso gut — siehe
+  /// [ResolverWarning.taxpunktwertAmbiguous].
   final double minTaxpunktwert;
   final double maxTaxpunktwert;
 
@@ -193,7 +197,7 @@ class InvoiceResolver {
 
   const InvoiceResolver({
     this.minTaxpunktwert = 0.85,
-    this.maxTaxpunktwert = 1.70,
+    this.maxTaxpunktwert = 3.00,
     this.quantityTolerance = 0.05,
     this.amountTolerance = 0.10,
     this.maxQuantity = 20,
@@ -227,7 +231,8 @@ class InvoiceResolver {
     }
 
     final search = _findTaxpunktwert(raw);
-    final taxpunktwert = search?.value;
+    final taxpunktwert = search?.displayValue;
+    final rechenwert = search?.preciseValue;
     if (taxpunktwert == null && raw.isNotEmpty) {
       warnings.add(ResolverWarning.taxpunktwertNotFound);
     }
@@ -236,7 +241,7 @@ class InvoiceResolver {
     }
 
     final lines = raw.map((l) {
-      final fit = taxpunktwert == null ? null : _fitLine(l, taxpunktwert);
+      final fit = rechenwert == null ? null : _fitLine(l, rechenwert);
       return ResolvedLine(
         code: l.code,
         description: l.description,
@@ -357,21 +362,42 @@ class InvoiceResolver {
     }
     if (bestCandidate == null || bestHits == 0) return null;
 
-    // Gibt es einen gleich gut passenden, aber deutlich anderen Wert? Dann ist
-    // die Rechnung rechnerisch nicht eindeutig. In dem Fall wird bewusst der
-    // GROESSERE Faktor gewaehlt, weil er die kleineren Mengen ergibt: lieber
-    // eine doppelte Verrechnung uebersehen als eine behaupten, die es nicht
-    // gibt.
-    var ambiguous = false;
-    for (final candidate in candidates) {
-      final s = score(candidate);
-      final equallyGood = s.hits == bestHits && s.deviation <= bestDeviation + 0.01;
-      final materiallyDifferent = (candidate - bestCandidate!).abs() / bestCandidate! > 0.1;
-      if (equallyGood && materiallyDifferent) {
-        ambiguous = true;
-        if (candidate > bestCandidate!) bestCandidate = candidate;
+    // Die strukturelle Mehrdeutigkeit: Halbiert man den Faktor und verdoppelt
+    // alle Mengen, passt die Rechnung rechnerisch immer genauso gut. Aus den
+    // Betraegen allein ist das nicht zu entscheiden.
+    //
+    // Aufloesen laesst es sich ueber die Mengenspalte: Rechnungen drucken ihre
+    // Anzahl mit. Stimmt eine zurueckgerechnete Menge mit einer Zahl ueberein,
+    // die auf derselben Zeile steht, ist die konkurrierende Lesart widerlegt.
+    // Ohne solche Bestaetigung bleibt es mehrdeutig — dann wird der GROESSERE
+    // Faktor gewaehlt, weil er die kleineren Mengen ergibt: lieber eine
+    // doppelte Verrechnung uebersehen als eine behaupten, die es nicht gibt.
+    int corroboration(double candidate) {
+      var count = 0;
+      for (final line in lines) {
+        final fit = _fitLine(line, candidate);
+        if (fit == null) continue;
+        final passtZurMengenspalte =
+            line.otherNumbers.any((n) => (n - fit.quantity).abs() < 0.01);
+        if (passtZurMengenspalte) count++;
       }
+      return count;
     }
+
+    final equallyGood = candidates.where((c) {
+      final s = score(c);
+      return s.hits == bestHits && s.deviation <= bestDeviation + 0.01;
+    }).toList()
+      ..sort((a, b) {
+        final byCorroboration = corroboration(b).compareTo(corroboration(a));
+        return byCorroboration != 0 ? byCorroboration : b.compareTo(a);
+      });
+
+    bestCandidate = equallyGood.first;
+    final topCorroboration = corroboration(bestCandidate!);
+    final ambiguous = equallyGood.any((c) =>
+        (c - bestCandidate!).abs() / bestCandidate! > 0.1 &&
+        corroboration(c) == topCorroboration);
 
     // Nachjustieren ueber alle Positionen, die aufgehen.
     var amountSum = 0.0;
@@ -385,7 +411,8 @@ class InvoiceResolver {
 
     final value = taxpunkteSum > 0 ? amountSum / taxpunkteSum : bestCandidate!;
     return _TaxpunktwertSearch(
-      value: double.parse(value.toStringAsFixed(2)),
+      preciseValue: value,
+      displayValue: double.parse(value.toStringAsFixed(2)),
       isAmbiguous: ambiguous,
     );
   }
@@ -405,9 +432,24 @@ class _LineFit {
 }
 
 class _TaxpunktwertSearch {
-  final double value;
+  /// Der ungerundete Wert. Damit wird gerechnet.
+  ///
+  /// Die Rundung auf zwei Stellen ist eine Anzeigefrage und hat im Rechenweg
+  /// nichts verloren: Bei 122 Taxpunkten macht sie schon 12 Rappen aus, bei
+  /// 286 Taxpunkten ueber einen Franken. Beides genug, um eine voellig
+  /// korrekte Position an der Frankenprobe scheitern zu lassen.
+  final double preciseValue;
+
+  /// Der gerundete Wert fuer die Anzeige.
+  final double displayValue;
+
   final bool isAmbiguous;
-  const _TaxpunktwertSearch({required this.value, required this.isAmbiguous});
+
+  const _TaxpunktwertSearch({
+    required this.preciseValue,
+    required this.displayValue,
+    required this.isAmbiguous,
+  });
 }
 
 class _RawLine {
@@ -427,6 +469,10 @@ class _RawLine {
 
   List<double> get possibleTaxpunkte =>
       catalogTaxpunkte != null ? [catalogTaxpunkte!] : invoiceTaxpunkteCandidates;
+
+  /// Alle Zahlen der Zeile ausser dem Betrag — darunter die Mengenspalte.
+  /// Dient als Gegenprobe, wenn der Faktor nicht eindeutig ist.
+  List<double> get otherNumbers => invoiceTaxpunkteCandidates;
 }
 
 const invoiceResolver = InvoiceResolver();

@@ -1,8 +1,10 @@
 import '../data/tariff_catalog.dart';
+import '../models/finding.dart';
 import '../models/ocr_result.dart';
 import '../models/request.dart';
 import 'invoice_parser.dart';
 import 'invoice_resolver.dart';
+import 'invoice_rules.dart';
 
 /// Fuehrt Parser und Resolver zu dem Ergebnis zusammen, das die Screens
 /// anzeigen. Reine Logik ohne Flutter-Abhaengigkeit — testbar ohne Geraet.
@@ -26,6 +28,11 @@ class InvoiceAnalysisResult {
   /// Kopfdaten der Rechnung, falls gelesen.
   final ParsedInvoiceHeader? header;
 
+  /// Belegbare Befunde. Leer heisst NICHT "alles in Ordnung", sondern
+  /// "nichts, was die App belegen kann" — ein wichtiger Unterschied, den die
+  /// Anzeige nicht verwischen darf.
+  final List<InvoiceFinding> findings;
+
   const InvoiceAnalysisResult({
     required this.lines,
     required this.invoiceTotal,
@@ -35,23 +42,24 @@ class InvoiceAnalysisResult {
     this.totalsMatch = false,
     this.isTrustworthy = false,
     this.header,
+    this.findings = const [],
   });
 
   double get difference => invoiceTotal - referenceTotal;
   int get unresolvedCount => lines.where((l) => !l.isResolved).length;
 }
 
-/// Wertet die erkannten Seiten einer echten Rechnung aus.
+/// Wertet die erkannten Seiten einer echten Rechnung aus: lesen, rechnen,
+/// beurteilen.
 ///
-/// Was hier NICHT passiert: eine Position als auffaellig markieren. Der
-/// Resolver stellt fest, was auf der Rechnung steht — ob eine zweifach
-/// verrechnete Anaesthesie eine Rueckfrage rechtfertigt, ist eine fachliche
-/// Entscheidung und noch nicht getroffen. Bis dahin bleibt [TariffLine.flagged]
-/// durchgehend false und der Referenzbetrag gleich dem Rechnungsbetrag.
-/// Lieber keine Aussage als eine, die niemand verantwortet hat.
+/// Beurteilt wird nur, was sich belegen laesst — derzeit das Preisniveau
+/// gegen den tariflichen Hoechstsatz (siehe logic/invoice_rules.dart). Die
+/// mengenbezogene Pruefung gegen das Behandlungsmuster fehlt noch bewusst;
+/// die dafuer noetigen erwarteten Mengen liegen nicht belastbar vor.
 InvoiceAnalysisResult analyzeInvoice(List<OcrPage> pages, TariffCatalog catalog) {
   final parsed = const InvoiceParser().parse(pages);
   final resolved = const InvoiceResolver().resolve(parsed, catalog);
+  final findings = const InvoiceRules().evaluate(resolved);
 
   final lines = resolved.lines
       .map((l) => TariffLine(
@@ -66,15 +74,23 @@ InvoiceAnalysisResult analyzeInvoice(List<OcrPage> pages, TariffCatalog catalog)
 
   final invoiceTotal = resolved.sumOfLines;
 
+  // Der Referenzbetrag ist das, was die Rechnung im zulaessigen Rahmen kosten
+  // wuerde. Ohne Befund ist das der Rechnungsbetrag selbst -- die Differenz
+  // ist dann null, und die App behauptet keine Abweichung.
+  final ueberschuss = findings
+      .map((f) => f.excessChf ?? 0)
+      .fold(0.0, (a, b) => a > b ? a : b);
+
   return InvoiceAnalysisResult(
     lines: lines,
     invoiceTotal: invoiceTotal,
-    referenceTotal: invoiceTotal,
+    referenceTotal: invoiceTotal - ueberschuss,
     factor: resolved.taxpunktwert,
     statedTotal: resolved.statedTotal,
     totalsMatch: resolved.totalsMatch,
     isTrustworthy: resolved.isTrustworthy,
     header: parsed.header,
+    findings: findings,
   );
 }
 

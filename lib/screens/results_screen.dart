@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/finding.dart';
 import '../models/request.dart';
 import '../state/requests_repository.dart';
 import '../theme/app_theme.dart';
@@ -25,6 +26,8 @@ class ResultsScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
+            for (final f in req.findings) _BefundKarte(finding: f),
+            if (req.findings.isNotEmpty) const SizedBox(height: 16),
             _LesestatusKarte(
               gefunden: req.lines.length,
               offen: offen,
@@ -80,11 +83,16 @@ class ResultsScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 16),
-            const _Hinweis(
+            _Hinweis(
               icon: Icons.info_outline_rounded,
-              text: 'Die App hat die Rechnung gelesen und nachgerechnet. Ob eine Position '
-                  'klärungsbedürftig ist, beurteilt sie noch nicht — diese Regeln werden '
-                  'gerade festgelegt. Bis dahin ersetzt die Anzeige keine Prüfung.',
+              text: req.findings.isEmpty
+                  ? 'Geprüft wurde bisher nur das Preisniveau gegen den tariflichen '
+                      'Höchstsatz — hier ohne Befund. Ob eine Leistung häufiger verrechnet '
+                      'wurde als üblich, prüft die App noch nicht. "Kein Befund" heisst '
+                      'also nicht "alles in Ordnung", sondern "nichts, was sich belegen lässt".'
+                  : 'Der Befund beruht auf einer Rechnung, nicht auf einer Beurteilung der '
+                      'Behandlung. Es kann Gründe geben, die die App nicht kennt — deshalb '
+                      'ist der nächste Schritt eine Frage an die Praxis, keine Forderung.',
             ),
 
             const SizedBox(height: 20),
@@ -285,6 +293,55 @@ class _Hinweis extends StatelessWidget {
             child: Text(text,
                 style: const TextStyle(fontSize: 12, color: AppColors.slate600, height: 1.4)),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+
+class _BefundKarte extends StatelessWidget {
+  final InvoiceFinding finding;
+  const _BefundKarte({required this.finding});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.danger.withValues(alpha: 0.06),
+        border: Border.all(color: AppColors.danger.withValues(alpha: 0.35)),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.priority_high_rounded, size: 18, color: AppColors.danger),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(finding.title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, color: AppColors.danger, fontSize: 14)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(finding.explanation,
+              style: const TextStyle(fontSize: 12, color: AppColors.slate700, height: 1.45)),
+          if (finding.excessChf != null) ...[
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Differenz zum Höchstsatz',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                Text('CHF ${finding.excessChf!.toStringAsFixed(2)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              ],
+            ),
+          ],
         ],
       ),
     );
