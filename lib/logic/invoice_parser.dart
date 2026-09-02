@@ -39,6 +39,14 @@ class ParsedTariffRow {
   final String code;
   final String description;
 
+  /// Behandlungsdatum dieser Zeile, wenn die Praxis eines druckt.
+  ///
+  /// Manche Formulare stellen es der Position voran ("16.02.2026 4.5430
+  /// Komposit-Fuellung"). Es hier herauszuloesen haelt es aus der Bezeichnung
+  /// heraus -- und legt den Grund fuer spaetere Mengenregeln: Erst mit einem
+  /// Datum je Zeile ist zu sehen, was in derselben Sitzung verrechnet wurde.
+  final DateTime? date;
+
   /// Alle Zahlenfelder dieser Zeile, von links nach rechts. Je nach
   /// Rechnungsformular sind das Anzahl / Taxpunkte / Taxpunktwert /
   /// Zeilenbetrag — die Zuordnung passiert bewusst erst im Abgleich, weil
@@ -52,6 +60,7 @@ class ParsedTariffRow {
     required this.description,
     required this.numbers,
     required this.box,
+    this.date,
   });
 
   /// Der Zeilenbetrag steht in aller Regel ganz rechts.
@@ -329,8 +338,23 @@ List<List<OcrTextLine>> groupIntoRows(
 // --- Parser -----------------------------------------------------------------
 
 final RegExp _tariffCode = RegExp(r'\b(\d[.,]\d{4})\b');
+final RegExp _zeilenDatum = RegExp(r'\b(\d{1,2})[.,](\d{1,2})[.,](\d{4})\b');
 final RegExp _email = RegExp(r'[\w.+-]+@[\w-]+\.[\w.-]+');
 final RegExp _looksNumeric = RegExp(r'^[\s\d.,]*\d[\s\d.,]*(CHF|CHE|GHF|Fr\.?)?\s*$', caseSensitive: false);
+
+/// Ein Datum aus drei erkannten Gruppen -- nur, wenn es eines sein kann.
+/// Sonst stuende ein 31.13. in den Daten, und niemand wuesste warum.
+DateTime? _datumAus(RegExpMatch treffer) {
+  final tag = int.tryParse(treffer.group(1)!);
+  final monat = int.tryParse(treffer.group(2)!);
+  final jahr = int.tryParse(treffer.group(3)!);
+  if (tag == null || monat == null || jahr == null) return null;
+  if (tag < 1 || tag > 31 || monat < 1 || monat > 12) return null;
+  if (jahr < 2000 || jahr > 2100) return null;
+  final datum = DateTime(jahr, monat, tag);
+  // DateTime(2026, 2, 31) ergibt den 3. Maerz -- das war kein Datum.
+  return datum.day == tag && datum.month == monat ? datum : null;
+}
 
 class InvoiceParser {
   const InvoiceParser();
@@ -410,7 +434,19 @@ class InvoiceParser {
       // Bezeichnung entfernt wird aber der tatsaechlich gelesene Text.
       // Ohne das faellt die betroffene Position komplett aus der Erfassung.
       final code = rawCode.replaceAll(',', '.');
-      final description = codeCell.text.replaceFirst(rawCode, '').trim();
+      var description = codeCell.text.replaceFirst(rawCode, '').trim();
+
+      // Steht ein Behandlungsdatum in derselben Zelle, gehoert es nicht in die
+      // Bezeichnung.
+      DateTime? zeilenDatum;
+      final datumTreffer = _zeilenDatum.firstMatch(description);
+      if (datumTreffer != null) {
+        zeilenDatum = _datumAus(datumTreffer);
+        if (zeilenDatum != null) {
+          description = description.replaceFirst(datumTreffer.group(0)!, '');
+        }
+      }
+      description = description.replaceAll(RegExp(r'^[\s,;:.\-]+'), '').trim();
 
       final numbers = <NumberField>[];
       for (final cell in row) {
@@ -424,6 +460,7 @@ class InvoiceParser {
       result.add(ParsedTariffRow(
         code: code,
         description: description,
+        date: zeilenDatum,
         numbers: numbers,
         box: codeCell.box,
       ));
