@@ -28,6 +28,8 @@ verschickt, nicht über einen Server von uns.
 | Tarifcode-Erkennung & Abgleich mit Referenzdaten | ⏳ Demo-Daten, echtes Parsing = Phase 2 |
 | Rückfrage-E-Mail (mailto-Entwurf) | ✅ fertig |
 | Ombudsstellen-Verzeichnis (21 Kantone) | ✅ fertig |
+| Verschlüsselte Ablage auf dem Gerät, Gerätesicherung abgeschaltet | ✅ fertig |
+| App-Sperre (Fingerabdruck) | ⏳ offen |
 | Kostenschätzung (Taxpunkte × Taxpunktwert) | ✅ fertig |
 | Mehrsprachigkeit DE/FR/IT | ⏳ offen |
 | Store-Veröffentlichung | ⏳ offen |

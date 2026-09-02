@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/request.dart';
+import '../state/profile_controller.dart';
 import '../state/requests_repository.dart';
 import '../theme/app_theme.dart';
 import '../widgets/smile_app_bar.dart';
@@ -55,7 +56,40 @@ class RequestScreen extends StatelessWidget {
         '$aufzaehlung'
         '${_grund(req)}\n\n'
         'Besten Dank für Ihre Rückmeldung.\n\n'
-        'Freundliche Grüsse';
+        'Freundliche Grüsse'
+        // Ohne Namen endet der Brief mit der Grussformel und nichts weiter --
+        // die Praxis wuesste nicht, wer schreibt.
+        '${profileController.profile.isComplete ? '\n${profileController.profile.fullName}' : ''}';
+  }
+
+  /// Laesst die Empfaengeradresse korrigieren, solange die Anfrage noch nicht
+  /// gesendet ist. Die Texterkennung liest E-Mail-Adressen nicht immer
+  /// richtig, und ohne richtige Adresse geht die Rueckfrage ins Leere.
+  Future<void> _adresseAendern(BuildContext context, DentalRequest req) async {
+    final feld = TextEditingController(text: req.dentistEmail ?? '');
+    final neu = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('E-Mail der Praxis'),
+        content: TextField(
+          controller: feld,
+          autofocus: true,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(hintText: 'praxis@beispiel.ch'),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx), child: const Text('Abbrechen')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, feld.text.trim()),
+              child: const Text('Übernehmen')),
+        ],
+      ),
+    );
+    feld.dispose();
+    if (neu != null) {
+      requestsRepository.updateCaptured(req.id, dentistEmail: neu);
+    }
   }
 
   @override
@@ -65,7 +99,9 @@ class RequestScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: smileAppBar(context, 'Anfrage', showHome: true),
-      body: SafeArea(
+      body: AnimatedBuilder(
+        animation: requestsRepository,
+        builder: (context, _) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
@@ -93,17 +129,27 @@ class RequestScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      if (req.dentistEmail != null)
+                      if (req.dentistEmail != null && req.dentistEmail!.isNotEmpty)
                         _Empfaenger(
                           icon: Icons.mail_outline_rounded,
-                          text: 'Wird an ${req.dentistEmail} adressiert — von der Rechnung gelesen.',
+                          text: 'Wird an ${req.dentistEmail} adressiert.',
+                          aktion: req.status == RequestStatus.captured
+                              ? () => _adresseAendern(context, req)
+                              : null,
                         )
                       else
-                        const _Empfaenger(
+                        _Empfaenger(
                           icon: Icons.help_outline_rounded,
                           warnung: true,
-                          text: 'Auf der Rechnung wurde keine E-Mail-Adresse gefunden. '
-                              'Die Adresse musst du in deiner Mail-App noch eintragen.',
+                          text: 'Auf der Rechnung wurde keine E-Mail-Adresse gefunden.',
+                          aktion: req.status == RequestStatus.captured
+                              ? () => _adresseAendern(context, req)
+                              : null,
+                        ),
+                      if (profileController.profile.wantsCopy)
+                        _Empfaenger(
+                          icon: Icons.content_copy_outlined,
+                          text: 'Eine Kopie geht an ${profileController.profile.email}.',
                         ),
                       if (!req.isTrustworthy) ...[
                         const SizedBox(height: 12),
@@ -132,11 +178,13 @@ class RequestScreen extends StatelessWidget {
                 icon: const Icon(Icons.send_outlined, size: 18),
                 label: const Text('Anfrage senden'),
                 onPressed: () async {
+                  final profil = profileController.profile;
                   final uri = Uri(
                     scheme: 'mailto',
                     path: req.dentistEmail ?? '',
                     query: 'subject=${Uri.encodeComponent('Rückfrage zu Rechnung Nr. ${req.invoiceNumber}')}'
-                        '&body=${Uri.encodeComponent(_mailText(req))}',
+                        '&body=${Uri.encodeComponent(_mailText(req))}'
+                        '${profil.wantsCopy ? '&cc=${Uri.encodeComponent(profil.email)}' : ''}',
                   );
                   var opened = false;
                   try {
@@ -162,6 +210,7 @@ class RequestScreen extends StatelessWidget {
               ),
             ],
           ),
+          ),
         ),
       ),
     );
@@ -172,11 +221,18 @@ class _Empfaenger extends StatelessWidget {
   final IconData icon;
   final String text;
   final bool warnung;
-  const _Empfaenger({required this.icon, required this.text, this.warnung = false});
+  final VoidCallback? aktion;
+  const _Empfaenger({
+    required this.icon,
+    required this.text,
+    this.warnung = false,
+    this.aktion,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration:
           BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(10)),
@@ -189,6 +245,13 @@ class _Empfaenger extends StatelessWidget {
             child: Text(text,
                 style: const TextStyle(fontSize: 12, color: AppColors.slate600, height: 1.4)),
           ),
+          if (aktion != null)
+            TextButton(
+              onPressed: aktion,
+              style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8), minimumSize: Size.zero),
+              child: const Text('Ändern', style: TextStyle(fontSize: 12)),
+            ),
         ],
       ),
     );

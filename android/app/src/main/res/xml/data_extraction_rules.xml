@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Smile speichert Rechnungsdaten auf dem Geraet. Das sind Gesundheitsdaten.
+
+  Ohne diese Regeln wuerde Android sie automatisch in die Cloud sichern und
+  bei einem Geraetewechsel uebertragen. Damit waere das Versprechen, dass die
+  Rechnung das Geraet nicht verlaesst, schlicht falsch.
+
+  Beides ist hier vollstaendig ausgeschlossen. Der Preis: Bei einem
+  Geraetewechsel ist die Historie weg. Das ist die richtige Seite des
+  Kompromisses.
+
+  (Hinweis fuer spaetere Bearbeitung: In XML-Kommentaren sind zwei
+  aufeinanderfolgende Bindestriche nicht erlaubt. Ein Gedankenstrich in dieser
+  Datei laesst den Android-Build scheitern.)
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+        <exclude domain="file" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+    </device-transfer>
+</data-extraction-rules>

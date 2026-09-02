@@ -3,6 +3,7 @@ import '../state/upload_controller.dart';
 import '../theme/app_theme.dart';
 import 'about_screen.dart';
 import 'cost_estimate_screen.dart';
+import 'profile_screen.dart';
 import 'requests_list_screen.dart';
 import 'upload_screen.dart';
 
@@ -63,6 +64,12 @@ class WelcomeScreen extends StatelessWidget {
                         MaterialPageRoute(builder: (_) => const RequestsListScreen())),
                   ),
                   const SizedBox(height: 24),
+                  TextButton.icon(
+                    icon: const Icon(Icons.person_outline, size: 18),
+                    label: const Text('Meine Angaben'),
+                    onPressed: () => Navigator.push(
+                        context, MaterialPageRoute(builder: (_) => const ProfileScreen())),
+                  ),
                   TextButton(
                     onPressed: () => Navigator.push(
                         context, MaterialPageRoute(builder: (_) => const AboutScreen())),

@@ -30,9 +30,10 @@ class AboutScreen extends StatelessWidget {
               icon: Icons.phonelink_lock_outlined,
               titel: 'Deine Daten bleiben bei dir',
               text: 'Alles passiert auf diesem Gerät: Texterkennung, Berechnung, Abgleich. '
-                  'Es gibt keinen Server, kein Konto und keine Anmeldung. Deine Rechnung '
-                  'wird nirgends hochgeladen und nach dem Schliessen der App nicht '
-                  'aufbewahrt.',
+                  'Es gibt keinen Server, kein Konto und keine Anmeldung. Deine Anfragen '
+                  'werden verschlüsselt auf diesem Gerät gespeichert — nicht in der Cloud, '
+                  'und auch nicht in der automatischen Gerätesicherung. Bei einem '
+                  'Gerätewechsel beginnst du deshalb mit einer leeren Liste.',
             ),
             _Abschnitt(
               icon: Icons.fact_check_outlined,

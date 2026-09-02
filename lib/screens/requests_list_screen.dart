@@ -37,9 +37,9 @@ class RequestsListScreen extends StatelessWidget {
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Diese Liste gilt nur, solange die App offen ist. Smile bewahrt '
-                          'keine Rechnungsdaten auf — deine Anfrage lebt danach in deiner '
-                          'Mail-App weiter, nicht hier.',
+                          'Diese Liste liegt verschlüsselt auf deinem Gerät — nicht in der '
+                          'Cloud und nicht in der Gerätesicherung. Erfasste Anfragen kannst '
+                          'du später weiterbearbeiten, gesendete nicht mehr ändern.',
                           style: TextStyle(fontSize: 12, color: AppColors.slate600, height: 1.4),
                         ),
                       ),

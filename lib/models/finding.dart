@@ -33,4 +33,25 @@ class InvoiceFinding {
     this.allowed,
     this.excessChf,
   });
+
+  Map<String, dynamic> toJson() => {
+        'kind': kind.name,
+        'title': title,
+        'explanation': explanation,
+        'observed': observed,
+        'allowed': allowed,
+        'excessChf': excessChf,
+      };
+
+  factory InvoiceFinding.fromJson(Map<String, dynamic> json) => InvoiceFinding(
+        kind: FindingKind.values.firstWhere(
+          (k) => k.name == json['kind'],
+          orElse: () => FindingKind.factorAboveTariffMaximum,
+        ),
+        title: json['title'] as String,
+        explanation: json['explanation'] as String,
+        observed: (json['observed'] as num?)?.toDouble(),
+        allowed: (json['allowed'] as num?)?.toDouble(),
+        excessChf: (json['excessChf'] as num?)?.toDouble(),
+      );
 }

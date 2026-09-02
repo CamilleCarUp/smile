@@ -17,6 +17,14 @@ class UploadedFile {
   OcrPage? ocrPage;
 
   UploadedFile(this.name, {this.path, this.recognizedText, this.ocrPage});
+
+  /// Bewusst ohne [recognizedText] und [ocrPage]: Die Erkennungsdaten sind
+  /// gross und werden nach der Auswertung nicht mehr gebraucht. Was bleibt,
+  /// ist der Name fuer die Anzeige.
+  Map<String, dynamic> toJson() => {'name': name, 'path': path};
+
+  factory UploadedFile.fromJson(Map<String, dynamic> json) =>
+      UploadedFile(json['name'] as String, path: json['path'] as String?);
 }
 
 /// Eine Position aus der Rechnung, abgeglichen mit den Referenzdaten.
@@ -49,6 +57,26 @@ class TariffLine {
   });
 
   bool get isResolved => quantity != null && taxpunkte != null;
+
+  Map<String, dynamic> toJson() => {
+        'code': code,
+        'description': description,
+        'amountChf': amountChf,
+        'flagged': flagged,
+        'quantity': quantity,
+        'taxpunkte': taxpunkte,
+        'taxpunkteFromCatalog': taxpunkteFromCatalog,
+      };
+
+  factory TariffLine.fromJson(Map<String, dynamic> json) => TariffLine(
+        code: json['code'] as String,
+        description: json['description'] as String,
+        amountChf: (json['amountChf'] as num).toDouble(),
+        flagged: (json['flagged'] ?? false) as bool,
+        quantity: json['quantity'] as int?,
+        taxpunkte: (json['taxpunkte'] as num?)?.toDouble(),
+        taxpunkteFromCatalog: (json['taxpunkteFromCatalog'] ?? false) as bool,
+      );
 }
 
 class DentalRequest {
@@ -111,6 +139,57 @@ class DentalRequest {
     this.findings = const [],
     this.wasPhotographedCrooked = false,
   });
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'filename': filename,
+        'files': files.map((f) => f.toJson()).toList(),
+        'invoiceNumber': invoiceNumber,
+        'dentistName': dentistName,
+        'dentistAddress': dentistAddress,
+        'dentistEmail': dentistEmail,
+        'date': date.toIso8601String(),
+        'status': status.name,
+        'lines': lines.map((l) => l.toJson()).toList(),
+        'invoiceTotal': invoiceTotal,
+        'referenceTotal': referenceTotal,
+        'factor': factor,
+        'statedTotal': statedTotal,
+        'totalsMatch': totalsMatch,
+        'isTrustworthy': isTrustworthy,
+        'wasPhotographedCrooked': wasPhotographedCrooked,
+        'findings': findings.map((f) => f.toJson()).toList(),
+      };
+
+  factory DentalRequest.fromJson(Map<String, dynamic> json) => DentalRequest(
+        id: json['id'] as int,
+        filename: json['filename'] as String,
+        files: (json['files'] as List)
+            .map((f) => UploadedFile.fromJson(Map<String, dynamic>.from(f as Map)))
+            .toList(),
+        invoiceNumber: json['invoiceNumber'] as String,
+        dentistName: json['dentistName'] as String,
+        dentistAddress: json['dentistAddress'] as String,
+        dentistEmail: json['dentistEmail'] as String?,
+        date: DateTime.parse(json['date'] as String),
+        status: RequestStatus.values.firstWhere(
+          (s) => s.name == json['status'],
+          orElse: () => RequestStatus.captured,
+        ),
+        lines: (json['lines'] as List)
+            .map((l) => TariffLine.fromJson(Map<String, dynamic>.from(l as Map)))
+            .toList(),
+        invoiceTotal: (json['invoiceTotal'] as num).toDouble(),
+        referenceTotal: (json['referenceTotal'] as num).toDouble(),
+        factor: (json['factor'] as num?)?.toDouble(),
+        statedTotal: (json['statedTotal'] as num?)?.toDouble(),
+        totalsMatch: (json['totalsMatch'] ?? false) as bool,
+        isTrustworthy: (json['isTrustworthy'] ?? false) as bool,
+        wasPhotographedCrooked: (json['wasPhotographedCrooked'] ?? false) as bool,
+        findings: (json['findings'] as List? ?? const [])
+            .map((f) => InvoiceFinding.fromJson(Map<String, dynamic>.from(f as Map)))
+            .toList(),
+      );
 
   List<TariffLine> get flaggedLines => lines.where((l) => l.flagged).toList();
   List<TariffLine> get unresolvedLines => lines.where((l) => !l.isResolved).toList();
