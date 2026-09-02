@@ -30,6 +30,20 @@ OCR-Texts plus Abgleich mit den Referenzdaten ersetzt. **Die Signatur bleibt
 dabei gleich** (Dateien/Text rein, `InvoiceAnalysisResult` raus), damit weder
 Screens noch bestehende Tests angefasst werden müssen.
 
+### `logic/rechnungs_trenner.dart`
+
+Sitzt **vor** dem Parser und gruppiert nur Seiten, ohne sie zu lesen. Ein PDF
+aus der Praxis enthält oft mehrere Rechnungen; alles zusammen auszuwerten
+ergäbe eine Summe, die es nie gab — und die richtig aussieht.
+
+Getrennt wird nach Referenznummer, ersatzweise nach Seitenzähler
+(`Seite: 1/2`). Fehlt beides, wird zusammengelassen: Eine fälschlich
+zerrissene Rechnung fällt bei der Summenprobe auf und wird als unsicher
+gemeldet, eine fälschlich zusammengefasste nicht.
+
+Aus jeder Gruppe wird ein eigener Eintrag im Verlauf, benannt nach seiner
+eigenen Referenznummer. Der Ergebnis-Bildschirm sagt, wenn es mehrere waren.
+
 ### `state/` — getrennte Controller statt eines Monolithen
 Ursprünglich gab es eine einzige `AppState`-Klasse für alles. Die wurde
 aufgeteilt, weil ein zentraler Zustand jede Änderung riskant macht und sich

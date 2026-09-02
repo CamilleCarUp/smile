@@ -1,7 +1,15 @@
 // Testet UploadController isoliert von der UI -- reine ChangeNotifier-Logik.
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:smile/data/tariff_catalog.dart';
+import 'package:smile/data/tariff_repository.dart';
 import 'package:smile/models/ocr_result.dart';
+import 'package:smile/state/requests_repository.dart';
 import 'package:smile/state/upload_controller.dart';
+
+import '../support/fake_store.dart';
 
 void main() {
   setUp(() => uploadController.reset());
@@ -90,6 +98,54 @@ void main() {
       // Erkennbar an der markierten Position aus dem Klickdummy.
       expect(req.flaggedLines, hasLength(1));
       expect(req.flaggedLines.single.code, '4.0650');
+    });
+  });
+
+  group('mehrere Rechnungen in einem Import', () {
+    OcrPage fixture(String name) {
+      final json = jsonDecode(File('test/fixtures/$name').readAsStringSync())
+          as Map<String, dynamic>;
+      return OcrPage.fromJson(
+          Map<String, dynamic>.from((json['pages'] as List).first as Map));
+    }
+
+    setUp(() {
+      requestsRepository = RequestsRepository(store: FakeStore());
+      tariffRepository.overrideWith(TariffCatalog.fromJsonString(
+          File('assets/reference-data/dentotar_seed.json').readAsStringSync()));
+    });
+
+    test('aus zwei Rechnungen werden zwei Einträge, nicht ein Total', () async {
+      // Der Fehler, den es zu verhindern gilt: vier fremde Totale zu einer
+      // Summe addiert, die es nie gab -- und die richtig aussieht.
+      uploadController.addUploadedFile('seite1.png', path: '/tmp/1.png');
+      uploadController.addUploadedFile('seite2.png', path: '/tmp/2.png');
+      uploadController.currentUploadFiles[0].ocrPage =
+          fixture('ocr_rechnung_mit_tp_spalten.json');
+      uploadController.currentUploadFiles[1].ocrPage =
+          fixture('ocr_kostenvoranschlag.json');
+
+      final erste = await uploadController.processUpload();
+
+      expect(uploadController.erkannteRechnungen, 2);
+      expect(requestsRepository.requests, hasLength(2));
+      // Angezeigt wird die erste, nicht die zuletzt angelegte.
+      expect(requestsRepository.currentRequest, same(erste));
+      expect(erste.invoiceNumber, '20001');
+      // Jede Rechnung behält ihr eigenes Total.
+      expect(erste.statedTotal, 257.30);
+      expect(erste.files.single.name, contains('20001'));
+    });
+
+    test('eine einzelne Rechnung bleibt ein Eintrag', () async {
+      uploadController.addUploadedFile('seite1.png', path: '/tmp/1.png');
+      uploadController.currentUploadFiles.single.ocrPage =
+          fixture('ocr_rechnung_mit_tp_spalten.json');
+
+      await uploadController.processUpload();
+
+      expect(uploadController.erkannteRechnungen, 1);
+      expect(requestsRepository.requests, hasLength(1));
     });
   });
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import '../data/tariff_repository.dart';
 import '../logic/invoice_matcher.dart';
+import '../logic/rechnungs_trenner.dart';
 import '../models/ocr_result.dart';
 import '../models/request.dart';
 import 'requests_repository.dart';
@@ -54,28 +55,56 @@ class UploadController extends ChangeNotifier {
   /// rekonstruktion, Tarifcodes, Betraege, Mengen, Summenprobe. Nur wenn gar
   /// keine Erkennung vorliegt (etwa beim Durchklicken ohne Foto), greift die
   /// Demo-Auswertung aus dem Klickdummy.
-  Future<DentalRequest> processUpload() async {
-    final pages = currentUploadFiles
-        .map((f) => f.ocrPage)
-        .whereType<OcrPage>()
-        .toList();
+  /// Wieviele Rechnungen der letzte Import ergeben hat.
+  ///
+  /// Mehr als eine ist der Normalfall bei einem PDF aus der Praxis. Der
+  /// Nutzer muss es erfahren: Still vier Eintraege anzulegen waere so
+  /// verwirrend, wie vier Totale zu addieren.
+  int erkannteRechnungen = 1;
 
-    final InvoiceAnalysisResult analysis;
-    if (pages.isEmpty) {
+  Future<DentalRequest> processUpload() async {
+    final mitSeiten =
+        currentUploadFiles.where((f) => f.ocrPage != null).toList();
+
+    if (mitSeiten.isEmpty) {
       if (currentUploadFiles.isEmpty) {
         currentUploadFiles.add(UploadedFile('Rechnung_Seite1.pdf'));
       }
-      analysis = analyzeInvoiceDemo();
-    } else {
-      analysis = analyzeInvoice(pages, await tariffRepository.load());
+      erkannteRechnungen = 1;
+      final req = requestsRepository.createFromAnalysis(
+        files: List.of(currentUploadFiles),
+        analysis: analyzeInvoiceDemo(),
+      );
+      notifyListeners();
+      return req;
     }
 
-    final req = requestsRepository.createFromAnalysis(
-      files: List.of(currentUploadFiles),
-      analysis: analysis,
-    );
+    final katalog = await tariffRepository.load();
+    final gruppen =
+        rechnungsTrenner.trennen(mitSeiten.map((f) => f.ocrPage!).toList());
+
+    // Seiten ohne Erkennung haengen an der ersten Rechnung: Sie sollen im
+    // Verlauf nicht spurlos verschwinden.
+    final ohneSeiten =
+        currentUploadFiles.where((f) => f.ocrPage == null).toList();
+
+    DentalRequest? erste;
+    for (final gruppe in gruppen) {
+      final dateien = mitSeiten
+          .where((f) => gruppe.seiten.any((s) => identical(s, f.ocrPage)))
+          .toList();
+      final req = requestsRepository.createFromAnalysis(
+        files: [...dateien, if (erste == null) ...ohneSeiten],
+        analysis: analyzeInvoice(gruppe.seiten, katalog),
+      );
+      erste ??= req;
+    }
+
+    erkannteRechnungen = gruppen.length;
+    // Angezeigt wird die erste, nicht die zuletzt angelegte.
+    requestsRepository.currentRequest = erste;
     notifyListeners();
-    return req;
+    return erste!;
   }
 }
 

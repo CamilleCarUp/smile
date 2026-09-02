@@ -28,6 +28,12 @@ class ResultsScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
+            // Mehrere Rechnungen in einem Import: Der Nutzer sieht hier die
+            // erste, die uebrigen liegen im Verlauf.
+            if (uploadController.erkannteRechnungen > 1) ...[
+              _MehrereKarte(anzahl: uploadController.erkannteRechnungen),
+              const SizedBox(height: 16),
+            ],
             if (!req.isTrustworthy) ...[
               _UnsicherKarte(request: req),
               const SizedBox(height: 16),
@@ -453,6 +459,37 @@ class _UnsicherKarte extends StatelessWidget {
                   (route) => route.isFirst,
                 );
               },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MehrereKarte extends StatelessWidget {
+  final int anzahl;
+  const _MehrereKarte({required this.anzahl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+          color: AppColors.databoxBg,
+          border: Border.all(color: AppColors.databoxBorder),
+          borderRadius: BorderRadius.circular(12)),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.collections_bookmark_outlined,
+              size: 18, color: AppColors.brand600),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              '$anzahl Rechnungen erkannt. Du siehst die erste — die übrigen '
+              'liegen unter "Meine Anfragen", jede für sich geprüft.',
+              style: const TextStyle(fontSize: 12, color: AppColors.slate600, height: 1.4),
             ),
           ),
         ],
