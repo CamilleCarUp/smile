@@ -67,13 +67,23 @@ class UploadController extends ChangeNotifier {
         currentUploadFiles.where((f) => f.ocrPage != null).toList();
 
     if (mitSeiten.isEmpty) {
-      if (currentUploadFiles.isEmpty) {
-        currentUploadFiles.add(UploadedFile('Rechnung_Seite1.pdf'));
-      }
       erkannteRechnungen = 1;
+
+      // Zwei sehr verschiedene Faelle, die frueher denselben Ausgang hatten:
+      //
+      //   * Gar keine Datei -- jemand klickt sich ohne Foto durch. Dafuer die
+      //     Demo-Auswertung aus dem Klickdummy.
+      //   * Dateien da, aber keine Erkennung -- das Foto war unlesbar oder
+      //     die Texterkennung ist gescheitert. Hier darf die Demo NICHT
+      //     einspringen: Sonst stuende eine erfundene Rechnung samt markierter
+      //     Position als Ergebnis eines echten Fotos da. Das waere der
+      //     schlimmste Fehler, den diese App machen kann.
+      final leer = currentUploadFiles.isEmpty;
+      if (leer) currentUploadFiles.add(UploadedFile('Rechnung_Seite1.pdf'));
+
       final req = requestsRepository.createFromAnalysis(
         files: List.of(currentUploadFiles),
-        analysis: analyzeInvoiceDemo(),
+        analysis: leer ? analyzeInvoiceDemo() : analyzeUnreadable(),
       );
       notifyListeners();
       return req;

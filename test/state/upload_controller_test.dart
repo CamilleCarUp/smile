@@ -76,28 +76,22 @@ void main() {
       expect(file.recognizedText, contains('Fehler bei der Texterkennung'));
     });
 
-    test('processUpload erstellt eine Anfrage mit den hochgeladenen Dateien', () async {
+    test('processUpload legt eine Anfrage mit den hochgeladenen Dateien an', () async {
+      // Eine Datei ohne Erkennung ist keine Demo, sondern eine unlesbare
+      // Aufnahme -- und wird auch so benannt.
       uploadController.addUploadedFile('Rechnung_Test.pdf');
       final req = await uploadController.processUpload();
 
       expect(req.files, hasLength(1));
-      expect(req.lines, isNotEmpty);
+      expect(req.lines, isEmpty);
+      expect(req.isTrustworthy, isFalse);
+      expect(req.dentistName, 'Praxis nicht erkannt');
       // Der Kameraname überlebt die Erfassung nicht: Benannt wird nach dem,
-      // was auf der Rechnung steht. Hier greift die Demo-Auswertung, die
-      // keine Rechnungsnummer kennt -- also Praxis und Datum.
+      // was auf der Rechnung steht. Hier stand nichts.
       expect(req.filename, isNot(contains('Rechnung_Test')));
-      expect(req.filename, contains('Max Muster'));
+      expect(req.filename, startsWith('Rechnung vom'));
       expect(req.files.single.name, endsWith('.pdf'),
           reason: 'die Endung des Originals bleibt erhalten');
-    });
-
-    test('ohne Erkennungsdaten greift die Demo-Auswertung', () async {
-      uploadController.addUploadedFile('Rechnung_Test.pdf');
-      final req = await uploadController.processUpload();
-
-      // Erkennbar an der markierten Position aus dem Klickdummy.
-      expect(req.flaggedLines, hasLength(1));
-      expect(req.flaggedLines.single.code, '4.0650');
     });
   });
 
@@ -146,6 +140,36 @@ void main() {
 
       expect(uploadController.erkannteRechnungen, 1);
       expect(requestsRepository.requests, hasLength(1));
+    });
+  });
+
+  group('unlesbare Bilder', () {
+    setUp(() => requestsRepository = RequestsRepository(store: FakeStore()));
+
+    test('ein gescheitertes Foto ergibt kein erfundenes Ergebnis', () async {
+      // Der schlimmste Fehler, den diese App machen kann: Nach einem
+      // unlesbaren Foto die Demo-Rechnung samt markierter Position zeigen.
+      uploadController.addUploadedFile('kaputt.jpg', path: '/tmp/kaputt.jpg');
+      await uploadController.runOcrOnUploads(
+          (path) async => throw StateError('Bild unlesbar'));
+
+      final req = await uploadController.processUpload();
+
+      expect(req.lines, isEmpty);
+      expect(req.isTrustworthy, isFalse);
+      expect(req.flaggedLines, isEmpty);
+      expect(req.invoiceTotal, 0);
+    });
+
+    test('ohne jede Datei greift weiterhin die Demo', () async {
+      // Durchklicken ohne Foto soll etwas zeigen -- nur eben nicht als
+      // Ergebnis einer echten Aufnahme.
+      final req = await uploadController.processUpload();
+
+      expect(req.lines, isNotEmpty);
+      // Erkennbar an der markierten Position aus dem Klickdummy.
+      expect(req.flaggedLines, hasLength(1));
+      expect(req.flaggedLines.single.code, '4.0650');
     });
   });
 }

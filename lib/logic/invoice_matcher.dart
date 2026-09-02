@@ -102,6 +102,23 @@ InvoiceAnalysisResult analyzeInvoice(List<OcrPage> pages, TariffCatalog catalog)
 /// Feste Beispieldaten aus dem Klickdummy (Kap. 4.4 der Thesis) — die doppelt
 /// verrechnete Infiltrationsanaesthesie ist markiert. Wird noch als
 /// Rueckfallweg genutzt, wenn keine Erkennungsdaten vorliegen.
+/// Ergebnis, wenn zu den erfassten Bildern keine Erkennung vorliegt.
+///
+/// Das ist ausdruecklich **nicht** die Demo-Auswertung: Ein Foto, das die
+/// Texterkennung nicht lesen konnte, darf niemals eine erfundene Rechnung
+/// ergeben. Leer und unsicher ist die einzige ehrliche Antwort -- der
+/// Ergebnis-Bildschirm sagt dann, dass nichts gefunden wurde, und bietet an,
+/// neu aufzunehmen.
+InvoiceAnalysisResult analyzeUnreadable() => const InvoiceAnalysisResult(
+      lines: [],
+      invoiceTotal: 0,
+      referenceTotal: 0,
+      // Ein leerer Kopf, nicht gar keiner: "kein Kopf" heisst im Verlauf
+      // "Demo-Auswertung" und wuerde der unlesbaren Aufnahme den Namen der
+      // Beispielpraxis geben.
+      header: ParsedInvoiceHeader(),
+    );
+
 InvoiceAnalysisResult analyzeInvoiceDemo() {
   final lines = <TariffLine>[
     const TariffLine(code: '4.0020', description: 'Kurze klinische Untersuchung', amountChf: 39.70, quantity: 1, taxpunkte: 33.1, taxpunkteFromCatalog: true),
