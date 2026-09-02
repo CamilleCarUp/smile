@@ -27,6 +27,10 @@ class _UploadScreenState extends State<UploadScreen> {
   /// die App bei einem dicken PDF minutenlang stumm da.
   String? _pdfFortschritt;
 
+  /// Wieviele Seiten schon gelesen sind. Null, solange nichts laeuft.
+  int? _gelesen;
+  int _zuLesen = 0;
+
   /// Meldungen mit Platz fuer einen ganzen Satz: Die Standard-Snackbar
   /// schneidet lange Texte ab, und gerade die erklaeren, was zu tun ist.
   void _melde(String text) {
@@ -124,9 +128,26 @@ class _UploadScreenState extends State<UploadScreen> {
   }
 
   Future<void> _analyze() async {
-    setState(() => _isAnalyzing = true);
-    await uploadController.runOcrOnUploads(ocrService.recognizePage);
-    setState(() => _isAnalyzing = false);
+    setState(() {
+      _isAnalyzing = true;
+      _gelesen = 0;
+      _zuLesen = uploadController.currentUploadFiles.where((f) => f.path != null).length;
+    });
+    await uploadController.runOcrOnUploads(
+      ocrService.recognizePage,
+      fortschritt: (fertig, gesamt) {
+        if (mounted) {
+          setState(() {
+            _gelesen = fertig;
+            _zuLesen = gesamt;
+          });
+        }
+      },
+    );
+    setState(() {
+      _isAnalyzing = false;
+      _gelesen = null;
+    });
     if (mounted) {
       Navigator.push(context, MaterialPageRoute(builder: (_) => const OcrDebugScreen()));
     }
@@ -151,6 +172,10 @@ class _UploadScreenState extends State<UploadScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      if (_isAnalyzing) ...[
+                        _LesenKarte(gelesen: _gelesen ?? 0, gesamt: _zuLesen),
+                        const SizedBox(height: 16),
+                      ],
                       const Text('Rechnungsfoto(s) hinzufügen',
                           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppColors.slate600)),
                       const SizedBox(height: 12),
@@ -263,7 +288,13 @@ class _PickerTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    // Als ein Element vorlesen, nicht als Icon, Zeile und Unterzeile
+    // einzeln -- und ausdruecklich als Schaltflaeche.
+    return Semantics(
+      button: true,
+      label: sublabel == null ? label : '$label. $sublabel',
+      excludeSemantics: true,
+      child: InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -292,6 +323,80 @@ class _PickerTile extends StatelessWidget {
           ],
         ),
       ),
+      ),
+    );
+  }
+}
+
+/// Was waehrend der Texterkennung zu sehen ist.
+///
+/// Sekunden je Bild sind lang genug, dass jemand sich fragt, ob die App noch
+/// lebt -- und lang genug, um das Wichtigste ueber Smile zu sagen: Das Bild
+/// bleibt hier. Ein Balken allein haette diesen Platz verschenkt.
+class _LesenKarte extends StatelessWidget {
+  final int gelesen;
+  final int gesamt;
+  const _LesenKarte({required this.gelesen, required this.gesamt});
+
+  @override
+  Widget build(BuildContext context) {
+    final mehrere = gesamt > 1;
+    final anteil = gesamt == 0 ? null : gelesen / gesamt;
+
+    return Semantics(
+      liveRegion: true,
+      label: mehrere
+          ? 'Rechnung wird gelesen, Seite ${gelesen + 1} von $gesamt'
+          : 'Rechnung wird gelesen',
+      excludeSemantics: true,
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: AppColors.brand50,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.brand100),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2.4, color: AppColors.brand500),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    mehrere
+                        ? 'Seite ${gelesen < gesamt ? gelesen + 1 : gesamt} von $gesamt wird gelesen'
+                        : 'Die Rechnung wird gelesen',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, color: AppColors.brand600),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: anteil == null || anteil == 0 ? null : anteil,
+                minHeight: 6,
+                backgroundColor: AppColors.brand100,
+                color: AppColors.brand500,
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              'Das Bild bleibt auf deinem Gerät. Smile lädt nichts hoch und fragt '
+              'niemanden — gelesen wird hier, im Telefon.',
+              style: TextStyle(fontSize: 12, color: AppColors.slate600, height: 1.4),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -304,8 +409,8 @@ class _PhaseNote extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(color: AppColors.databoxBg, borderRadius: BorderRadius.circular(10)),
       child: const Text(
-        'Foto, PDF-Import & Texterkennung laufen jetzt echt und komplett auf deinem Gerät (kein Upload). '
-        'Die Auswertung selbst nutzt noch Demo-Daten – echtes Zuordnen von Tarifcode zu Preis folgt in Phase 2.',
+        'Foto, PDF-Import, Texterkennung und Auswertung laufen komplett auf deinem Gerät — '
+        'kein Upload, kein Konto. Am zuverlässigsten liest Smile ein direkt importiertes PDF.',
         style: TextStyle(fontSize: 12, color: AppColors.slate600),
       ),
     );

@@ -42,8 +42,16 @@ class UploadController extends ChangeNotifier {
   /// vollstaendig aus, war es aber nicht.
   final List<String> unlesbareSeiten = [];
 
-  Future<void> runOcrOnUploads(Future<OcrPage> Function(String path) recognize) async {
+  /// [fortschritt] wird nach jeder Seite gerufen (fertig, gesamt). Die
+  /// Erkennung dauert Sekunden je Bild -- ohne Rueckmeldung sieht die App in
+  /// dieser Zeit aus, als haenge sie.
+  Future<void> runOcrOnUploads(
+    Future<OcrPage> Function(String path) recognize, {
+    void Function(int fertig, int gesamt)? fortschritt,
+  }) async {
     unlesbareSeiten.clear();
+    final gesamt = currentUploadFiles.where((f) => f.path != null).length;
+    var fertig = 0;
     for (final f in currentUploadFiles) {
       if (f.path == null) continue;
       try {
@@ -55,6 +63,7 @@ class UploadController extends ChangeNotifier {
         f.recognizedText = '(Fehler bei der Texterkennung: $e)';
         unlesbareSeiten.add(f.name);
       }
+      fortschritt?.call(++fertig, gesamt);
     }
     notifyListeners();
   }

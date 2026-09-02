@@ -257,50 +257,85 @@ class _PositionsZeile extends StatelessWidget {
   final TariffLine line;
   const _PositionsZeile({required this.line});
 
+  /// Was eine Vorlesehilfe sagen soll. Ohne das liest sie vier Bruchstuecke
+  /// vor -- Code, Bezeichnung, Menge, Betrag -- ohne Zusammenhang.
+  String get _vorlesetext {
+    final teile = <String>[
+      'Position ${line.code}',
+      line.description,
+      if (line.isResolved)
+        '${line.quantity} mal ${line.taxpunkte} Taxpunkte'
+      else
+        'nicht aufschlüsselbar',
+      '${line.amountChf.toStringAsFixed(2)} Franken',
+      if (line.flagged) 'auffällig',
+    ];
+    return teile.join(', ');
+  }
+
   @override
   Widget build(BuildContext context) {
     final unklar = !line.isResolved;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 50,
-            child: Text(line.code,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: line.flagged ? FontWeight.bold : FontWeight.normal,
-                  color: line.flagged ? AppColors.danger : AppColors.slate500,
-                )),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(line.description,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: line.flagged ? FontWeight.bold : FontWeight.normal,
-                      color: unklar ? AppColors.slate400 : AppColors.slate700,
-                    )),
-                if (line.isResolved)
-                  Text(
-                    '${line.quantity} × ${line.taxpunkte} TP'
-                    '${line.taxpunkteFromCatalog ? '' : ' (von der Rechnung gelesen)'}',
-                    style: const TextStyle(fontSize: 11, color: AppColors.slate400),
-                  )
-                else
-                  const Text('nicht aufschlüsselbar',
-                      style: TextStyle(
-                          fontSize: 11, color: AppColors.slate400, fontStyle: FontStyle.italic)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text('CHF ${line.amountChf.toStringAsFixed(2)}',
-              style: const TextStyle(fontSize: 13, color: AppColors.slate700)),
-        ],
+    // Bei stark vergroesserter Systemschrift passen Code, Bezeichnung und
+    // Betrag nicht mehr nebeneinander. Dann untereinander -- lieber laenger
+    // scrollen als abgeschnittene Betraege.
+    final grosseSchrift = MediaQuery.textScalerOf(context).scale(13) > 20;
+
+    final code = Text(line.code,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: line.flagged ? FontWeight.bold : FontWeight.normal,
+          color: line.flagged ? AppColors.danger : AppColors.slate500,
+        ));
+    final betrag = Text('CHF ${line.amountChf.toStringAsFixed(2)}',
+        style: const TextStyle(fontSize: 13, color: AppColors.slate700));
+    final beschreibung = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(line.description,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: line.flagged ? FontWeight.bold : FontWeight.normal,
+              color: unklar ? AppColors.slate400 : AppColors.slate700,
+            )),
+        if (line.isResolved)
+          Text(
+            '${line.quantity} × ${line.taxpunkte} TP'
+            '${line.taxpunkteFromCatalog ? '' : ' (von der Rechnung gelesen)'}',
+            style: const TextStyle(fontSize: 11, color: AppColors.slate400),
+          )
+        else
+          const Text('nicht aufschlüsselbar',
+              style: TextStyle(
+                  fontSize: 11, color: AppColors.slate400, fontStyle: FontStyle.italic)),
+      ],
+    );
+
+    return Semantics(
+      label: _vorlesetext,
+      excludeSemantics: true,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: grosseSchrift
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [Flexible(child: code), betrag],
+                  ),
+                  beschreibung,
+                ],
+              )
+            : Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(width: 50, child: code),
+                  Expanded(child: beschreibung),
+                  const SizedBox(width: 8),
+                  betrag,
+                ],
+              ),
       ),
     );
   }
@@ -319,7 +354,10 @@ class _Betragszeile extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: style),
+        // Bei grosser Schrift bricht das Etikett um, statt den Betrag
+        // abzuschneiden.
+        Expanded(child: Text(label, style: style)),
+        const SizedBox(width: 12),
         Text('CHF ${betrag.toStringAsFixed(2)}', style: style),
       ],
     );

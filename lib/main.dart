@@ -68,6 +68,13 @@ class _SmileAppState extends State<SmileApp> with WidgetsBindingObserver {
       title: 'Smile',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
+      // Bewusst nur hell. Kein Versehen und keine offene Baustelle:
+      // Zahnmedizin hat ein helles Bild, die Farben stammen aus dem
+      // A/B-Test der Thesis, und ein halber Dunkelmodus -- Material-Widgets
+      // dunkel, eigener Text weiterhin dunkelgrau auf dunkelgrau -- waere
+      // schlechter als keiner. Wer ihn nachruesten will, muss die Palette
+      // aus AppColors ins Theme verschieben; es sind 132 Stellen.
+      themeMode: ThemeMode.light,
       // Die Sperre liegt ueber der ganzen App, nicht als eigene Route:
       // Sonst bliebe ein bereits geoeffneter Bildschirm oberhalb der Sperre
       // stehen und damit sichtbar.

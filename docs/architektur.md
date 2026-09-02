@@ -125,10 +125,17 @@ Fehlerquelle ist.
 
 ## Bewusste Nicht-Entscheidungen
 
+**Kein Dunkelmodus.** Zahnmedizin hat ein helles Bild, und die Farben stammen
+aus dem A/B-Test der Thesis. Ein halber Dunkelmodus wäre schlechter als
+keiner: Die Palette steckt an 132 Stellen fest im Code, ein dunkles Theme
+würde die Material-Widgets umfärben und unseren eigenen Text dunkelgrau auf
+dunkelgrau lassen. `themeMode: ThemeMode.light` hält die Entscheidung fest.
+
 - **Kein Backend.** Siehe Local-First im README. Ein Server würde die
   datenschutzrechtliche Lage grundlegend ändern.
-- **Keine Datenbank.** Anfragen leben aktuell nur im Speicher. Persistenz
-  (z. B. `sqflite` oder verschlüsselte Dateien) ist ein eigener Schritt.
+- **Keine Datenbank.** Der Verlauf liegt als verschlüsselte Datei auf dem
+  Gerät, nicht in einer Datenbank — siehe [Speicherung](#speicherung). Für ein
+  paar Dutzend Anfragen wäre ein Datenbankschema mehr Wartung als Nutzen.
 - **Kein State-Management-Framework.** Erst sinnvoll, wenn der Zustand
   komplexer wird als jetzt.
 - **Keine Anmeldung, keine Konten.** Es gab einmal Anmelde- und
@@ -224,53 +231,3 @@ E-Mail-Adresse der Praxis — dort klemmt es in der Praxis, weil die
 Texterkennung Adressen nicht zuverlässig liest und die Rückfrage ohne
 richtige Adresse ins Leere geht. Was einmal gesendet ist, bleibt wie es war:
 Die Praxis hat den Text bereits.
-
-## Tests
-
-```
-test/
-├── logic/invoice_matcher_test.dart      Analyse-Logik (Summen, Markierungen)
-├── models/request_test.dart             Getter der Datenmodelle
-├── state/upload_controller_test.dart    Controller-Logik ohne UI
-├── screens/upload_screen_test.dart      Widget-Test + Regressionstest
-└── widget_test.dart                     Smoke-Test: App startet
-```
-
-`flutter test` — kein Gerät nötig.
-
-`test/support/fake_store.dart` hält eine Ablage im Speicher bereit. Ohne sie
-hängen alle Bildschirme mit Speicherzugriff am echten Keystore, den es im
-Test nicht gibt — der Zugriff scheitert dann zu einem unvorhersehbaren
-Zeitpunkt und macht Tests unzuverlässig. Aus demselben Grund sind
-`profileController` und `requestsRepository` bewusst veränderbar (`var` statt
-`final`), damit Tests eine eigene Instanz einsetzen können.
-
-Die Aufteilung folgt der Schichtung: alles unterhalb von `screens/` lässt sich
-ohne Flutter-Testframework prüfen und läuft entsprechend schnell. Widget-Tests
-gibt es nur dort, wo das Zusammenspiel von Zustand und UI die eigentliche
-Fehlerquelle ist.
-
-## Bewusste Nicht-Entscheidungen
-
-- **Kein Backend.** Siehe Local-First im README. Ein Server würde die
-  datenschutzrechtliche Lage grundlegend ändern.
-- **Keine Datenbank.** Anfragen leben aktuell nur im Speicher. Persistenz
-  (z. B. `sqflite` oder verschlüsselte Dateien) ist ein eigener Schritt.
-- **Kein State-Management-Framework.** Erst sinnvoll, wenn der Zustand
-  komplexer wird als jetzt.
-- **Keine Anmeldung, keine Konten.** Es gab einmal Anmelde- und
-  Registrierungsbildschirme aus dem Klickdummy — mit `testuser`/`1234` fest im
-  Code. Sie sind entfernt, und zwar nicht aus Bequemlichkeit: Ein Login
-  schützt den Zugang zu etwas. Smile hat keinen Server, kein Konto und bewahrt
-  nichts auf. Ein Passwort läge im selben Speicher wie die Daten, die es
-  schützen soll, und ohne Server gäbe es keinen Weg, es zurückzusetzen. Dazu
-  kämen Pflichten (Passwörter halten, Auskunfts- und Löschrechte nach DSG) für
-  einen Schutz, den es gar nicht gibt. Eine grundlose Hürde vor einer App, die
-  Hemmschwellen abbauen soll, ist zudem genau die falsche erste Begegnung.
-- **Keine Persistenz.** Erfasste Anfragen leben nur, solange die App offen
-  ist. Das ist eine bewusste Entscheidung, keine Lücke: Zahnarztrechnungen
-  sind Gesundheitsdaten, und was nicht gespeichert wird, kann nicht abfliessen.
-  Die Anfrage lebt nach dem Senden in der Mail-App des Nutzers weiter.
-  Soll die Historie doch erhalten bleiben, gehören zwei Dinge zusammen:
-  verschlüsselte lokale Speicherung **und** eine Gerätesperre (Fingerabdruck
-  oder Gerätecode über das Betriebssystem) — aber weiterhin kein Konto.
