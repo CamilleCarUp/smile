@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'screens/entry_screen.dart';
+import 'screens/welcome_screen.dart';
 import 'theme/app_theme.dart';
 
 void main() {
@@ -15,7 +15,7 @@ class SmileApp extends StatelessWidget {
       title: 'Smile',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
-      home: const EntryScreen(),
+      home: const WelcomeScreen(),
     );
   }
 }

@@ -25,6 +25,27 @@ class RequestsListScreen extends StatelessWidget {
             return ListView(
               padding: const EdgeInsets.all(20),
               children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                      color: AppColors.slate50, borderRadius: BorderRadius.circular(10)),
+                  child: const Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.info_outline_rounded, size: 16, color: AppColors.slate400),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Diese Liste gilt nur, solange die App offen ist. Smile bewahrt '
+                          'keine Rechnungsdaten auf — deine Anfrage lebt danach in deiner '
+                          'Mail-App weiter, nicht hier.',
+                          style: TextStyle(fontSize: 12, color: AppColors.slate600, height: 1.4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
                 const Text('Offen (erfasst & gesendet)',
                     style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.slate500, fontSize: 13)),
                 const SizedBox(height: 10),

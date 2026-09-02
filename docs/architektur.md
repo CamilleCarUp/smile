@@ -30,19 +30,18 @@ OCR-Texts plus Abgleich mit den Referenzdaten ersetzt. **Die Signatur bleibt
 dabei gleich** (Dateien/Text rein, `InvoiceAnalysisResult` raus), damit weder
 Screens noch bestehende Tests angefasst werden müssen.
 
-### `state/` — drei Controller statt eines Monolithen
+### `state/` — getrennte Controller statt eines Monolithen
 Ursprünglich gab es eine einzige `AppState`-Klasse für alles. Die wurde
 aufgeteilt, weil ein zentraler Zustand jede Änderung riskant macht und sich
 kaum isoliert testen lässt:
 
 | Datei | Zuständigkeit |
 |---|---|
-| `auth_controller.dart` | Login/Registrierung. Austauschbar gegen ein echtes Auth-System, ohne den Rest anzufassen. |
 | `upload_controller.dart` | Ausgewählte Dateien, OCR-Ergebnisse, Anstoss der Auswertung. |
 | `requests_repository.dart` | Verlauf der Anfragen (erfasst / gesendet / abgeschlossen). |
 
-Alle drei sind `ChangeNotifier` mit je einer globalen Instanz
-(`authController`, `uploadController`, `requestsRepository`). Bewusst einfach
+Beide sind `ChangeNotifier` mit je einer globalen Instanz
+(`uploadController`, `requestsRepository`). Bewusst einfach
 gehalten — ein Umbau auf Provider/Riverpod ist möglich, aber für die aktuelle
 Grösse nicht nötig.
 
@@ -87,3 +86,19 @@ Fehlerquelle ist.
   (z. B. `sqflite` oder verschlüsselte Dateien) ist ein eigener Schritt.
 - **Kein State-Management-Framework.** Erst sinnvoll, wenn der Zustand
   komplexer wird als jetzt.
+- **Keine Anmeldung, keine Konten.** Es gab einmal Anmelde- und
+  Registrierungsbildschirme aus dem Klickdummy — mit `testuser`/`1234` fest im
+  Code. Sie sind entfernt, und zwar nicht aus Bequemlichkeit: Ein Login
+  schützt den Zugang zu etwas. Smile hat keinen Server, kein Konto und bewahrt
+  nichts auf. Ein Passwort läge im selben Speicher wie die Daten, die es
+  schützen soll, und ohne Server gäbe es keinen Weg, es zurückzusetzen. Dazu
+  kämen Pflichten (Passwörter halten, Auskunfts- und Löschrechte nach DSG) für
+  einen Schutz, den es gar nicht gibt. Eine grundlose Hürde vor einer App, die
+  Hemmschwellen abbauen soll, ist zudem genau die falsche erste Begegnung.
+- **Keine Persistenz.** Erfasste Anfragen leben nur, solange die App offen
+  ist. Das ist eine bewusste Entscheidung, keine Lücke: Zahnarztrechnungen
+  sind Gesundheitsdaten, und was nicht gespeichert wird, kann nicht abfliessen.
+  Die Anfrage lebt nach dem Senden in der Mail-App des Nutzers weiter.
+  Soll die Historie doch erhalten bleiben, gehören zwei Dinge zusammen:
+  verschlüsselte lokale Speicherung **und** eine Gerätesperre (Fingerabdruck
+  oder Gerätecode über das Betriebssystem) — aber weiterhin kein Konto.
