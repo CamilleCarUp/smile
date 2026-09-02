@@ -78,6 +78,38 @@ Der Platz im Code ist markiert: `lib/logic/invoice_rules.dart`, unterhalb von
 Regel 1. Die Markierung erklärt dort auch, warum die Regel absichtlich fehlt —
 damit sie niemand versehentlich als Versäumnis „repariert".
 
+#### Was ohne Tarifrechte schon geht
+
+Die Mengenregel steckt zu einem guten Teil in der **Bezugsgrösse** der
+Position: pro Zahn, pro Fläche, pro Kanal, pro Sextant, pro Sitzung, pro
+Zeiteinheit. Wo die Praxis sie mit ausdruckt, steht sie im Text der Rechnung —
+und der gehört dem Nutzer, an ihm hängt keine Nutzungsbeschränkung.
+`lib/logic/bezugsgroesse.dart` liest sie dort heraus.
+
+Zwei Auswertungen bauen darauf auf, beide ohne Referenzdaten und ohne
+geschätzte Schwellenwerte:
+
+- **Zeitprobe.** Anzahl mal Takt ergibt die verrechnete Behandlungszeit. Das
+  ist eine Addition, keine Schätzung — und der Nutzer ist der Einzige, der
+  weiss, wie lange er tatsächlich im Stuhl sass.
+- **Wer hat behandelt.** Der Tarif führt dieselbe Leistung unter verschiedenen
+  Nummern, je nach Qualifikation (DH teurer als PA). Die App sieht, was
+  verrechnet wurde; wer am Stuhl stand, weiss allein der Nutzer.
+
+Beide sind Rückfragen an den Nutzer, keine Vorwürfe an die Praxis. Sie sind
+die einzige Stelle, an der eine Rückfrage wirklich gerechtfertigt ist: Die
+Antwort kann nirgends sonst herkommen.
+
+**Ernüchterung aus der Testrechnung:** Diese Praxissoftware druckt
+Kurzbezeichnungen *ohne* Bezugsgrösse — nur „einflächig" ist zu holen. Wie oft
+Einheiten mitgedruckt werden, lässt sich erst mit mehr echten Rechnungen
+sagen. Wo nichts dasteht, behauptet die App nichts.
+
+Reine Obergrenzen (pro Sitzung höchstens 1, pro Sextant höchstens 6) sind
+bewusst *nicht* gebaut: Eine Rechnung kann mehrere Sitzungen umfassen, und
+dann sind sie schlicht falsch. Belastbar würden sie erst mit einem Datum je
+Zeile — das wäre ein eigener Schritt in der Erkennung.
+
 ## Phase 4 — Rückfrage an die Praxis ✅ (Grundfunktion)
 Automatisch erzeugter, höflich formulierter E-Mail-Entwurf über die Mail-App
 des Nutzers. Ergänzend: Verzeichnis der kantonalen SSO-Ombudsstellen.
