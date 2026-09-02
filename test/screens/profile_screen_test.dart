@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:smile/models/request.dart';
 import 'package:smile/models/user_profile.dart';
 import 'package:smile/screens/profile_screen.dart';
 import 'package:smile/state/profile_controller.dart';
+import 'package:smile/state/requests_repository.dart';
 import 'package:smile/state/sperr_controller.dart';
 
 import '../support/fake_biometrie.dart';
@@ -15,6 +17,7 @@ void main() {
     profileController = ProfileController(store: FakeStore());
     sensor = FakeBiometrie();
     sperrController = SperrController(sensor: sensor);
+    requestsRepository = RequestsRepository(store: FakeStore());
   });
 
   Future<void> zeige(WidgetTester tester, {bool firstRun = false}) =>
@@ -122,6 +125,61 @@ void main() {
       // hier nicht: Die Meldung liegt genau über dem Knopf -- der Tipp würde
       // ins Leere gehen und der Test aus dem falschen Grund bestehen.
       expect(tester.widget<SwitchListTile>(find.byType(SwitchListTile)).value, isFalse);
+    });
+  });
+
+  group('Alle Daten löschen', () {
+    Future<void> zeigeMitDaten(WidgetTester tester) async {
+      profileController.profile =
+          const UserProfile(firstName: 'Toni', lastName: 'Maloni');
+      requestsRepository.requests.add(DentalRequest(
+        id: 1,
+        filename: 'Rechnung',
+        files: [UploadedFile('foto.jpg')],
+        invoiceNumber: '112233',
+        dentistName: 'Dr. med. dent. Max Muster',
+        dentistAddress: '',
+        date: DateTime(2026, 2, 16),
+        lines: const [],
+        invoiceTotal: 0,
+        referenceTotal: 0,
+      ));
+      await zeige(tester);
+      await tester.scrollUntilVisible(find.text('Alle Daten löschen'), 200,
+          scrollable: find.byType(Scrollable).first);
+    }
+
+    testWidgets('beim ersten Start gibt es nichts zu löschen', (tester) async {
+      await zeige(tester, firstRun: true);
+
+      expect(find.text('Alle Daten löschen'), findsNothing);
+    });
+
+    testWidgets('ein Abbruch löscht nichts', (tester) async {
+      await zeigeMitDaten(tester);
+
+      await tester.tap(find.text('Alle Daten löschen'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Abbrechen'));
+      await tester.pumpAndSettle();
+
+      expect(requestsRepository.requests, hasLength(1));
+      expect(profileController.profile.isComplete, isTrue);
+    });
+
+    testWidgets('bestätigt wird beides gelöscht', (tester) async {
+      // Die Zusage im Datenschutztext muss stimmen: Verlauf und Angaben weg,
+      // und die App steht wieder da wie nach der Installation.
+      await zeigeMitDaten(tester);
+
+      await tester.tap(find.text('Alle Daten löschen'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Endgültig löschen'));
+      await tester.pumpAndSettle();
+
+      expect(requestsRepository.requests, isEmpty);
+      expect(profileController.profile.isComplete, isFalse);
+      expect(find.text('Willkommen bei Smile'), findsOneWidget);
     });
   });
 }

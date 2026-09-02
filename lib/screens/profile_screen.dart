@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/user_profile.dart';
 import '../state/profile_controller.dart';
+import '../state/requests_repository.dart';
 import '../state/sperr_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/smile_app_bar.dart';
@@ -59,6 +60,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
     setState(() => _appLock = true);
+  }
+
+  /// Loescht Verlauf und Angaben unwiderruflich.
+  ///
+  /// Ohne diesen Weg waere die Zusage im Datenschutztext unwahr -- und
+  /// "App deinstallieren" ist keine Antwort auf "ich will nur die Rechnungen
+  /// weghaben".
+  Future<void> _allesLoeschen() async {
+    final sicher = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Alle Daten löschen?'),
+        content: const Text(
+          'Der Verlauf mit allen erfassten Rechnungen sowie dein Name und deine '
+          'E-Mail-Adresse werden von diesem Gerät gelöscht. Das lässt sich nicht '
+          'rückgängig machen — es gibt keine Kopie, auch keine in einer Cloud.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Abbrechen'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Endgültig löschen'),
+          ),
+        ],
+      ),
+    );
+    if (sicher != true || !mounted) return;
+
+    await requestsRepository.clearAll();
+    await profileController.clear();
+    if (!mounted) return;
+
+    // Ohne Namen beginnt die App von vorn -- derselbe Zustand wie nach der
+    // Installation.
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const ProfileScreen(firstRun: true)),
+      (route) => false,
+    );
   }
 
   Future<void> _speichern() async {
@@ -156,7 +199,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     // Beim ersten Start nicht: Da geht es um den Namen,
-                    // nicht um Einstellungen.
+                    // nicht um Einstellungen. Und es gibt noch nichts zu
+                    // loeschen.
                     if (!widget.firstRun) ...[
                       const SizedBox(height: 8),
                       SwitchListTile(
@@ -169,6 +213,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           'Fragt beim Start und nach jeder Pause nach Fingerabdruck, '
                           'Gesicht oder dem Code deines Geräts.',
                           style: TextStyle(fontSize: 12, color: AppColors.slate600, height: 1.4),
+                        ),
+                      ),
+                    ],
+                    if (!widget.firstRun) ...[
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: TextButton.icon(
+                          onPressed: _allesLoeschen,
+                          style: TextButton.styleFrom(foregroundColor: AppColors.danger),
+                          icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                          label: const Text('Alle Daten löschen'),
                         ),
                       ),
                     ],

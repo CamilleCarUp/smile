@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../data/rechtstexte.dart';
 import '../theme/app_theme.dart';
 import '../widgets/smile_app_bar.dart';
+import 'rechtstext_screen.dart';
 
 /// Erklaert, was Smile tut -- und was nicht.
 ///
@@ -18,15 +20,15 @@ class AboutScreen extends StatelessWidget {
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(20),
-          children: const [
-            _Abschnitt(
+          children: [
+            const _Abschnitt(
               icon: Icons.receipt_long_outlined,
               titel: 'Rechnung nachvollziehen',
               text: 'Du fotografierst deine Zahnarztrechnung oder wählst sie als PDF. '
                   'Smile liest die Tarifpositionen, rechnet nach, wie sich die Beträge '
                   'zusammensetzen, und zeigt dir das verständlich an.',
             ),
-            _Abschnitt(
+            const _Abschnitt(
               icon: Icons.phonelink_lock_outlined,
               titel: 'Deine Daten bleiben bei dir',
               text: 'Alles passiert auf diesem Gerät: Texterkennung, Berechnung, Abgleich. '
@@ -35,14 +37,14 @@ class AboutScreen extends StatelessWidget {
                   'und auch nicht in der automatischen Gerätesicherung. Bei einem '
                   'Gerätewechsel beginnst du deshalb mit einer leeren Liste.',
             ),
-            _Abschnitt(
+            const _Abschnitt(
               icon: Icons.fact_check_outlined,
               titel: 'Was geprüft wird',
               text: 'Ob die Beträge zum Tarif passen und ob die Rechnung in sich stimmt. '
                   'Liegt das Preisniveau über dem, was der Tarif für Privatpatienten '
                   'zulässt, sagt Smile das und rechnet es vor.',
             ),
-            _Abschnitt(
+            const _Abschnitt(
               icon: Icons.help_outline_rounded,
               titel: 'Was nicht geprüft wird',
               text: 'Ob eine Behandlung nötig oder richtig war — das kann keine App '
@@ -51,7 +53,7 @@ class AboutScreen extends StatelessWidget {
                   'nur einen Teil des Tarifs ab. "Kein Befund" heisst deshalb nicht '
                   '"alles in Ordnung", sondern "nichts, was sich belegen lässt".',
             ),
-            _Abschnitt(
+            const _Abschnitt(
               icon: Icons.forum_outlined,
               titel: 'Nachfragen ist dein Recht',
               text: 'Findet Smile etwas oder verstehst du eine Position nicht, bereitet '
@@ -60,6 +62,27 @@ class AboutScreen extends StatelessWidget {
                   'steht dir zu. Kommt ihr nicht weiter, vermitteln die kantonalen '
                   'Ombudsstellen der SSO kostenlos.',
             ),
+            const Divider(height: 32),
+            const Text('Rechtliches',
+                style: TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.slate500)),
+            const SizedBox(height: 8),
+            for (final text in Rechtstexte.alle)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.article_outlined, color: AppColors.brand500),
+                title: Text(text.titel,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                subtitle: Text(text.kurz,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12, color: AppColors.slate500)),
+                trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.slate400),
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => RechtstextScreen(text: text))),
+              ),
           ],
         ),
       ),

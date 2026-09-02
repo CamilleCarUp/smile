@@ -123,6 +123,27 @@ ohne Flutter-Testframework prüfen und läuft entsprechend schnell. Widget-Tests
 gibt es nur dort, wo das Zusammenspiel von Zustand und UI die eigentliche
 Fehlerquelle ist.
 
+## Rechtliche Texte
+
+`lib/data/rechtstexte.dart` haelt Datenschutz, Haftung und Impressum als Daten
+statt als Bildschirmtext. Das hat einen Grund: So laesst sich pruefen, was
+drinsteht — und was noch fehlt. Was auszufuellen ist, steht in ‹spitzen
+Klammern›; `Rechtstexte.offenePunkte` zaehlt es auf, ein Test haelt fest, dass
+es noch offen ist, und der Bildschirm sagt es dem Leser selbst. Ein leeres
+Impressum faellt sonst erst jemand anderem auf.
+
+Zwei Stellen, an denen der Text der App widersprechen koennte und es nicht
+darf:
+
+- **„Nichts verlaesst dein Geraet"** waere in dem Moment falsch, auf den die
+  ganze App hinarbeitet. Der Text sagt deshalb: von selbst nichts — und beim
+  Abschicken der Rueckfrage geht sie ueber die Mail-App des Nutzers hinaus.
+- **„Du kannst alles loeschen"** war unwahr, solange `clearAll()` im Code
+  stand und nichts es aufrief. Der Loeschweg unter *Meine Angaben* gehoert
+  zum Datenschutztext, nicht zu den Komfortfunktionen.
+
+Details zur Veroeffentlichung: [veroeffentlichung.md](veroeffentlichung.md).
+
 ## Bewusste Nicht-Entscheidungen
 
 **Kein Dunkelmodus.** Zahnmedizin hat ein helles Bild, und die Farben stammen
