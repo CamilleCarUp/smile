@@ -72,8 +72,15 @@ void main() {
       uploadController.addUploadedFile('Rechnung_Test.pdf');
       final req = await uploadController.processUpload();
 
-      expect(req.filename, contains('Rechnung_Test.pdf'));
+      expect(req.files, hasLength(1));
       expect(req.lines, isNotEmpty);
+      // Der Kameraname überlebt die Erfassung nicht: Benannt wird nach dem,
+      // was auf der Rechnung steht. Hier greift die Demo-Auswertung, die
+      // keine Rechnungsnummer kennt -- also Praxis und Datum.
+      expect(req.filename, isNot(contains('Rechnung_Test')));
+      expect(req.filename, contains('Max Muster'));
+      expect(req.files.single.name, endsWith('.pdf'),
+          reason: 'die Endung des Originals bleibt erhalten');
     });
 
     test('ohne Erkennungsdaten greift die Demo-Auswertung', () async {

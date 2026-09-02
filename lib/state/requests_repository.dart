@@ -3,6 +3,7 @@ import '../data/plz_verzeichnis.dart';
 import '../data/secure_store.dart';
 import '../logic/invoice_matcher.dart';
 import '../logic/praxis_ort.dart';
+import '../logic/rechnungsname.dart';
 import '../models/request.dart';
 
 /// Verwaltet die Liste erfasster/gesendeter/abgeschlossener Anfragen.
@@ -61,8 +62,6 @@ class RequestsRepository extends ChangeNotifier {
     required List<UploadedFile> files,
     required InvoiceAnalysisResult analysis,
   }) {
-    final primaryName = files.first.name;
-    final suffix = files.length > 1 ? ' (+${files.length - 1})' : '';
     final header = analysis.header;
 
     // Ohne Kopfdaten liegt eine Demo-Auswertung vor -- dann die Werte aus dem
@@ -74,28 +73,49 @@ class RequestsRepository extends ChangeNotifier {
         ? PraxisOrt.ausAdresse('Alte Gasse 13, 8005 Zürich')
         : header.dentistPlace;
 
+    final nummer = header == null
+        ? (_nextInvoiceCounter++).toString()
+        : (header.invoiceNumber ?? (_nextInvoiceCounter++).toString());
+    final praxis = header == null
+        ? 'Dr. med. dent. Max Muster'
+        : (header.dentistName ?? 'Praxis nicht erkannt');
+    final datum = header?.date ?? DateTime.now();
+
+    // Gleich beim Erfassen benennen, nicht spaeter von Hand: Nach drei
+    // Monaten sagt "IMG_20260216_101233.jpg" niemandem mehr etwas,
+    // Rechnungsnummer und Praxis schon.
+    final name = rechnungsName(
+      rechnungsnummer: header == null ? null : header.invoiceNumber,
+      praxis: praxis,
+      datum: datum,
+    );
+    for (var i = 0; i < files.length; i++) {
+      files[i].name = seitenName(
+        basis: name,
+        seite: i + 1,
+        seiten: files.length,
+        original: files[i].name,
+      );
+    }
+
     final req = DentalRequest(
       id: DateTime.now().millisecondsSinceEpoch,
-      filename: '$primaryName$suffix',
+      filename: name,
       files: files,
-      invoiceNumber: header == null
-          ? (_nextInvoiceCounter++).toString()
-          : (header.invoiceNumber ?? (_nextInvoiceCounter++).toString()),
-      dentistName: header == null
-          ? 'Dr. med. dent. Max Muster'
-          : (header.dentistName ?? 'Praxis nicht erkannt'),
+      invoiceNumber: nummer,
+      dentistName: praxis,
       dentistAddress: header == null
           ? 'Alte Gasse 13, 8005 Zürich'
           : (header.dentistAddress ?? ''),
-      date: header?.date ?? DateTime.now(),
+      date: datum,
       lines: analysis.lines,
       invoiceTotal: analysis.invoiceTotal,
       referenceTotal: analysis.referenceTotal,
       dentistEmail: header?.dentistEmail,
       // Aus dem Briefkopf gelesen; der Kanton kommt aus dem
       // Ortschaftenverzeichnis. Ist es nicht geladen oder die Postleitzahl
-      // unbekannt, bleibt der Kanton leer und die Ombudsstelle richtet sich
-      // nach dem Profil.
+      // unbekannt, bleibt der Kanton leer und der Ombudsstellen-Bildschirm
+      // zeigt die vollstaendige Liste.
       dentistPostalCode: praxisOrt?.plz,
       dentistCity: praxisOrt?.ort,
       dentistCanton: PlzVerzeichnis.aktuell

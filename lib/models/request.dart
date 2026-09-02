@@ -4,7 +4,10 @@ import 'ocr_result.dart';
 enum RequestStatus { captured, sent, completed }
 
 class UploadedFile {
-  final String name;
+  /// Anzeigename der Seite. Aenderbar, weil er beim Erfassen durch einen
+  /// sprechenden ersetzt wird, sobald der Briefkopf gelesen ist -- aus
+  /// "IMG_20260216_101233.jpg" wird "112233 Dr. med. dent. Max Muster.jpg".
+  String name;
   /// Lokaler Dateipfad auf dem Gerät (Kamera-Foto oder Galerie-Bild).
   /// Null bei Demo-Einträgen, die nie einen echten Datei-Ursprung hatten.
   final String? path;
