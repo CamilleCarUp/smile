@@ -3,15 +3,14 @@ import 'package:url_launcher/url_launcher.dart';
 import '../data/ombudsman_data.dart';
 import '../data/swiss_cantons.dart';
 import '../models/request.dart';
-import '../state/profile_controller.dart';
 import '../theme/app_theme.dart';
 
 /// Die kantonalen Ombudsstellen der SSO.
 ///
-/// Zustaendig ist die Stelle im Kanton der Praxis. Steht der Ort der Praxis
-/// auf der Rechnung, entscheidet er; sonst dient der Kanton aus dem Profil
-/// als Notbehelf. So durchsucht niemand 21 Eintraege, waehrend er ohnehin
-/// schon verunsichert ist.
+/// Zustaendig ist die Stelle im Kanton der Praxis. Welcher das ist, steht auf
+/// der Rechnung -- so durchsucht niemand 21 Eintraege, waehrend er ohnehin
+/// schon verunsichert ist. War auf der Rechnung nichts zu lesen, bleibt es
+/// bei der vollstaendigen Liste.
 class OmbudsmanScreen extends StatelessWidget {
   /// Kanton der Praxis, aus der Rechnung gelesen.
   final String? praxisKanton;
@@ -23,8 +22,7 @@ class OmbudsmanScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ausRechnung = (praxisKanton ?? '').isNotEmpty;
-    final kanton = ausRechnung ? praxisKanton! : profileController.profile.canton;
+    final kanton = (praxisKanton ?? '').trim();
     final zustaendig = ombudsmanContacts.where((c) => c.covers(kanton)).toList();
     final uebrige = ombudsmanContacts.where((c) => !c.covers(kanton)).toList();
 
@@ -44,21 +42,14 @@ class OmbudsmanScreen extends StatelessWidget {
             ),
 
             if (zustaendig.isNotEmpty) ...[
-              Text(
-                  ausRechnung
-                      ? 'Für die Praxis in ${praxisOrt ?? cantonName(kanton) ?? kanton}'
-                      : 'Für ${cantonName(kanton) ?? kanton}',
+              Text('Für die Praxis in ${praxisOrt ?? cantonName(kanton) ?? kanton}',
                   style: const TextStyle(
                       fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.brand600)),
               const SizedBox(height: 8),
               for (final c in zustaendig) _Eintrag(kontakt: c, hervorgehoben: true),
-              _Hinweis(
-                text: ausRechnung
-                    ? 'Smile hat den Ort der Praxis aus der Rechnung gelesen. Zuständig '
-                        'ist die Stelle im Kanton der Praxis, nicht deines Wohnorts.'
-                    : 'Zuständig ist in der Regel die Stelle im Kanton der Praxis, nicht '
-                        'deines Wohnorts. Behandelt dich jemand ausserhalb deines Kantons, '
-                        'nimm die Stelle von dort.',
+              const _Hinweis(
+                text: 'Smile hat den Ort der Praxis aus der Rechnung gelesen. Zuständig '
+                    'ist die Stelle im Kanton der Praxis, nicht deines Wohnorts.',
               ),
               const SizedBox(height: 20),
               const Text('Alle Stellen',
@@ -75,8 +66,8 @@ class OmbudsmanScreen extends StatelessWidget {
               const SizedBox(height: 12),
             ] else ...[
               const _Hinweis(
-                text: 'Unter "Meine Angaben" kannst du deinen Kanton hinterlegen — dann '
-                    'steht die zuständige Stelle künftig zuoberst.',
+                text: 'Auf der Rechnung war kein Ort der Praxis zu lesen. Zuständig ist '
+                    'die Stelle im Kanton der Praxis — such sie unten heraus.',
               ),
               const SizedBox(height: 12),
             ],

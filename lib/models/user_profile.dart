@@ -10,24 +10,20 @@
 /// dort, und die gesendete Nachricht liegt anschliessend in dessen Ordner
 /// "Gesendet". Die [email] ist deshalb freiwillig und dient allein einer
 /// Kopie an sich selbst.
+///
+/// Kein Kanton mehr: Die zustaendige Ombudsstelle ergibt sich aus dem Ort der
+/// Praxis auf der Rechnung (siehe docs/ortsverzeichnis.md). Ein zweiter,
+/// von Hand gepflegter Kanton haette dazu nur widersprechen koennen.
 class UserProfile {
   final String firstName;
   final String lastName;
   final String email;
 
-  /// Kantonskuerzel, freiwillig. Dient allein dazu, die zustaendige
-  /// Ombudsstelle hervorzuheben, statt den Nutzer 21 Eintraege durchsuchen zu
-  /// lassen. Nicht Pflicht: Wer es weglaesst, sieht einfach die ganze Liste.
-  final String canton;
-
   const UserProfile({
     this.firstName = '',
     this.lastName = '',
     this.email = '',
-    this.canton = '',
   });
-
-  bool get hasCanton => canton.trim().isNotEmpty;
 
   /// Beide Namensteile vorhanden? Ohne das laesst die App den Nutzer nicht
   /// weiter -- eine unterschriebene Rueckfrage ist die halbe Miete.
@@ -43,20 +39,17 @@ class UserProfile {
     String? firstName,
     String? lastName,
     String? email,
-    String? canton,
   }) =>
       UserProfile(
         firstName: firstName ?? this.firstName,
         lastName: lastName ?? this.lastName,
         email: email ?? this.email,
-        canton: canton ?? this.canton,
       );
 
   Map<String, dynamic> toJson() => {
         'firstName': firstName,
         'lastName': lastName,
         'email': email,
-        'canton': canton,
       };
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -71,7 +64,6 @@ class UserProfile {
         firstName: trenner > 0 ? alt.substring(0, trenner).trim() : alt,
         lastName: trenner > 0 ? alt.substring(trenner + 1).trim() : '',
         email: (json['email'] ?? '') as String,
-        canton: (json['canton'] ?? '') as String,
       );
     }
 
@@ -79,7 +71,6 @@ class UserProfile {
       firstName: (json['firstName'] ?? '') as String,
       lastName: (json['lastName'] ?? '') as String,
       email: (json['email'] ?? '') as String,
-      canton: (json['canton'] ?? '') as String,
     );
   }
 }

@@ -93,20 +93,25 @@ void main() {
       const original = UserProfile(
           firstName: 'Toni',
           lastName: 'Maloni',
-          email: 'toni@beispiel.ch',
-          canton: 'ZH');
+          email: 'toni@beispiel.ch');
       final restored = UserProfile.fromJson(original.toJson());
       expect(restored.firstName, 'Toni');
       expect(restored.lastName, 'Maloni');
       expect(restored.email, 'toni@beispiel.ch');
-      expect(restored.canton, 'ZH');
     });
 
-    test('der Kanton bleibt freiwillig', () {
-      const ohneKanton = UserProfile(firstName: 'Toni', lastName: 'Maloni');
-      expect(ohneKanton.isComplete, isTrue,
-          reason: 'Ohne Kanton kommt man weiter — er ist eine Bequemlichkeit.');
-      expect(ohneKanton.hasCanton, isFalse);
+    test('ein alter Eintrag mit Kanton stört nicht', () {
+      // Frühere Fassungen haben einen Kanton gespeichert. Der Ort der Praxis
+      // kommt heute aus der Rechnung; das alte Feld wird beim Lesen einfach
+      // übergangen.
+      final restored = UserProfile.fromJson({
+        'firstName': 'Toni',
+        'lastName': 'Maloni',
+        'email': '',
+        'canton': 'ZH',
+      });
+      expect(restored.fullName, 'Toni Maloni');
+      expect(restored.isComplete, isTrue);
     });
 
     test('gilt erst mit Vor- UND Nachname als vollständig', () {

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../data/swiss_cantons.dart';
 import '../models/user_profile.dart';
 import '../state/profile_controller.dart';
 import '../theme/app_theme.dart';
@@ -32,7 +31,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   String? _vornameFehler;
   String? _nachnameFehler;
-  late String _kanton = profileController.profile.canton;
 
   @override
   void dispose() {
@@ -56,7 +54,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       firstName: vorname,
       lastName: nachname,
       email: _email.text.trim(),
-      canton: _kanton,
     ));
     if (!mounted) return;
 
@@ -114,21 +111,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         labelText: 'Nachname',
                         errorText: _nachnameFehler,
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    DropdownButtonFormField<String>(
-                      initialValue: _kanton.isEmpty ? null : _kanton,
-                      isExpanded: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Kanton (freiwillig)',
-                        helperText: 'Nur als Notbehelf: Normalerweise liest Smile den Ort '
-                            'der Praxis aus der Rechnung.',
-                      ),
-                      items: [
-                        for (final k in swissCantons)
-                          DropdownMenuItem(value: k.code, child: Text('${k.name} (${k.code})')),
-                      ],
-                      onChanged: (wert) => setState(() => _kanton = wert ?? ''),
                     ),
                     const SizedBox(height: 20),
                     TextField(

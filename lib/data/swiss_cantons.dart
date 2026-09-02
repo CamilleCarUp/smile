@@ -1,11 +1,11 @@
 /// Die 26 Kantone.
 ///
 /// Bewusst nur Kuerzel und Name: Fuer die Zuordnung zur Ombudsstelle reicht
-/// der Kanton. Welcher es ist, kommt normalerweise aus der Rechnung -- die
-/// Postleitzahl der Praxis, uebersetzt ueber das Amtliche
+/// der Kanton. Welcher es ist, kommt aus der Rechnung -- die Postleitzahl
+/// oder der Ort der Praxis, uebersetzt ueber das Amtliche
 /// Ortschaftenverzeichnis (siehe lib/data/plz_verzeichnis.dart). Diese Liste
-/// dient der Anzeige und dem freiwilligen Eintrag im Profil, der einspringt,
-/// wenn auf der Rechnung keine Adresse zu lesen war.
+/// dient der Anzeige (Kuerzel zu ausgeschriebenem Namen) und den Tests, die
+/// pruefen, dass jeder Kanton hoechstens eine zustaendige Stelle hat.
 
 class Canton {
   final String code;

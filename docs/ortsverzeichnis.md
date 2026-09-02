@@ -6,9 +6,9 @@ Findet die App etwas an einer Rechnung, ist die Ombudsstelle der nächste
 Schritt. Es gibt 21 davon. Wer verunsichert ist, soll nicht 21 Einträge
 durchsuchen, sondern die richtige zuoberst sehen.
 
-Zuständig ist die Stelle im **Kanton der Praxis**, nicht am Wohnort des
-Patienten — wer auswärts behandelt wird, käme sonst an die falsche Adresse.
-*Diese Zuordnung ist fachlich noch zu bestätigen (siehe unten).*
+Zuständig ist die Stelle im **Kanton der Zahnarztpraxis**, nicht am Wohnort
+des Patienten — wer auswärts behandelt wird, käme sonst an die falsche
+Adresse. Von Camille bestätigt; die App richtet sich danach.
 
 ## Woher der Kanton kommt
 
@@ -20,10 +20,13 @@ Patienten — wer auswärts behandelt wird, käme sonst an die falsche Adresse.
 2. **Übersetzung in einen Kanton** über `data/plz_verzeichnis.dart`: zuerst
    über die Postleitzahl, ersatzweise über den Ortsnamen. Widersprechen sich
    die beiden, gibt es keine Antwort.
-3. **Notbehelf:** der freiwillige Kanton im Profil, falls auf der Rechnung
-   nichts zu lesen war.
-4. **Sonst:** die vollständige Liste, ohne Hervorhebung. Lieber nichts sagen
+3. **Sonst:** die vollständige Liste, ohne Hervorhebung. Lieber nichts sagen
    als jemanden an die falsche Stelle schicken.
+
+Bewusst kein Kanton im Profil als Notbehelf: Er stünde neben der Rechnung als
+zweite, von Hand gepflegte Quelle — und könnte ihr nur widersprechen. Ein
+Feld, das man ausfüllen muss und das im besten Fall dasselbe sagt wie die
+Rechnung, ist eines zu viel.
 
 Der ermittelte Kanton wird bei der Erfassung einmal bestimmt und mit der
 Rechnung gespeichert. Ein später aktualisiertes Verzeichnis beantwortet eine
@@ -87,8 +90,8 @@ dart run tool/plz_kantone_erzeugen.dart <pfad-zur-csv>
 
 Das Werkzeug schreibt je Postleitzahl und je Ortsname eine Zeile und vermerkt
 im Kopf der Datei, was es ausgelassen hat. Fehlt die Tabelle oder ist sie
-leer, startet die App trotzdem und fällt auf den Kanton aus dem Profil
-zurück.
+leer, startet die App trotzdem und zeigt die vollständige Liste der
+Ombudsstellen.
 
 ## Bekannte Grenzen
 
@@ -100,8 +103,8 @@ zurück.
   Erzeugen heraus.
 - **Für Nidwalden, Obwalden und Uri** ist keine eigene Ombudsstelle bekannt.
 
-## Offen
+## Entschieden
 
-- Fachlich bestätigen, ob die Stelle im Kanton der **Praxis** oder am
-  **Wohnort** zuständig ist. Die App sagt heute: Praxis. Bei der SSO
-  nachfragen — dieselbe Gelegenheit wie die Anfrage zu den Tarifrechten.
+Ob die Stelle im Kanton der Praxis oder am Wohnort zuständig ist, war eine
+Weile offen. Es ist die **Praxis**. Die App und der Hinweistext im
+Ombudsstellen-Bildschirm sagen genau das.
