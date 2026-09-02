@@ -93,11 +93,21 @@ void main() {
       const original = UserProfile(
           firstName: 'Toni',
           lastName: 'Maloni',
-          email: 'toni@beispiel.ch');
+          email: 'toni@beispiel.ch',
+          appLock: true);
       final restored = UserProfile.fromJson(original.toJson());
       expect(restored.firstName, 'Toni');
       expect(restored.lastName, 'Maloni');
       expect(restored.email, 'toni@beispiel.ch');
+      expect(restored.appLock, isTrue);
+    });
+
+    test('ohne gespeicherte Angabe ist die Sperre aus', () {
+      // Wer die App schon hat, soll nach dem Update nicht plötzlich vor
+      // einer Sperre stehen, die er nie eingeschaltet hat.
+      final restored = UserProfile.fromJson(
+          const {'firstName': 'Toni', 'lastName': 'Maloni', 'email': ''});
+      expect(restored.appLock, isFalse);
     });
 
     test('ein alter Eintrag mit Kanton stört nicht', () {

@@ -44,6 +44,8 @@ dependencies:
   # in einer Datei daneben. Siehe lib/data/secure_store.dart.
   flutter_secure_storage: ^9.2.2
   cryptography: ^2.7.0
+  # Fingerabdruck, Gesicht oder Geraetecode vor dem Verlauf.
+  local_auth: ^2.3.0
 
 dev_dependencies:
   flutter_test:

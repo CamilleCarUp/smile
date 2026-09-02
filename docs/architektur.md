@@ -157,6 +157,34 @@ kommt von dort, und die gesendete Nachricht liegt anschliessend in dessen
 Ordner „Gesendet". Die Adresse dient allein einer Kopie an sich selbst (CC)
 und bleibt deshalb freiwillig.
 
+### 4. App-Sperre (freiwillig)
+
+Die Verschlüsselung schützt die Datei, nicht den Blick auf ein entsperrtes
+Gerät, das man aus der Hand gibt. Dafür die Sperre: `services/biometrie.dart`
+kapselt `local_auth`, `state/sperr_controller.dart` hält den Zustand,
+`screens/sperr_screen.dart` zeigt ihn.
+
+Drei Entscheide, die dahinterstehen:
+
+- **Nicht nur Biometrie.** `biometricOnly: false` — ein nasser Finger oder ein
+  defekter Sensor darf niemanden aus seinem eigenen Verlauf aussperren. Der
+  Gerätecode bleibt der Weg zurück.
+- **Einschalten nur, wenn das Gerät sperren kann.** Ohne Fingerabdruck *und*
+  ohne Code bleibt der Schalter aus, mit einer Erklärung statt einer Falle.
+- **Als Überlagerung, nicht als Route.** Läge die Sperre als eigene Route im
+  Navigator, bliebe ein bereits geöffneter Bildschirm darüber stehen — und
+  damit sichtbar. Sie liegt deshalb im `builder` der `MaterialApp` über allem.
+
+Zugesperrt wird beim Start und beim Wechsel in den Hintergrund, aber nicht bei
+`inactive`: Das kurze `inactive` beim Herunterziehen der
+Benachrichtigungsleiste wäre sonst schon ein Grund. Und die laufende Abfrage
+sperrt sich nicht selbst zu — der Systemdialog schiebt die App selbst kurz in
+den Hintergrund.
+
+Der Sensor steckt hinter einer Schnittstelle, weil es im Test keinen gibt:
+`FakeBiometrie` spielt alle drei Ausgänge durch — erkannt, abgelehnt, gar kein
+Sensor.
+
 ### Bearbeitbarkeit
 
 Erfasste Anfragen lassen sich ändern, gesendete nicht

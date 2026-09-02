@@ -2,6 +2,8 @@
     <!-- Kamera-Berechtigung, sonst bricht image_picker beim Fotografieren lautlos ab -->
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <!-- App-Sperre: Fingerabdruck, Gesicht oder Geraetecode (local_auth) -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
     <application
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"

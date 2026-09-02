@@ -19,10 +19,17 @@ class UserProfile {
   final String lastName;
   final String email;
 
+  /// Soll die App beim Start und nach jeder Pause nach Fingerabdruck,
+  /// Gesicht oder Geraetecode fragen? Freiwillig: Die Ablage ist ohnehin
+  /// verschluesselt -- die Sperre schuetzt den Blick auf ein entsperrtes,
+  /// aus der Hand gegebenes Geraet.
+  final bool appLock;
+
   const UserProfile({
     this.firstName = '',
     this.lastName = '',
     this.email = '',
+    this.appLock = false,
   });
 
   /// Beide Namensteile vorhanden? Ohne das laesst die App den Nutzer nicht
@@ -39,17 +46,20 @@ class UserProfile {
     String? firstName,
     String? lastName,
     String? email,
+    bool? appLock,
   }) =>
       UserProfile(
         firstName: firstName ?? this.firstName,
         lastName: lastName ?? this.lastName,
         email: email ?? this.email,
+        appLock: appLock ?? this.appLock,
       );
 
   Map<String, dynamic> toJson() => {
         'firstName': firstName,
         'lastName': lastName,
         'email': email,
+        'appLock': appLock,
       };
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -64,6 +74,7 @@ class UserProfile {
         firstName: trenner > 0 ? alt.substring(0, trenner).trim() : alt,
         lastName: trenner > 0 ? alt.substring(trenner + 1).trim() : '',
         email: (json['email'] ?? '') as String,
+        appLock: (json['appLock'] ?? false) as bool,
       );
     }
 
@@ -71,6 +82,7 @@ class UserProfile {
       firstName: (json['firstName'] ?? '') as String,
       lastName: (json['lastName'] ?? '') as String,
       email: (json['email'] ?? '') as String,
+      appLock: (json['appLock'] ?? false) as bool,
     );
   }
 }

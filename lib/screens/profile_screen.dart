@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/user_profile.dart';
 import '../state/profile_controller.dart';
+import '../state/sperr_controller.dart';
 import '../theme/app_theme.dart';
 import '../widgets/smile_app_bar.dart';
 import 'welcome_screen.dart';
@@ -31,6 +32,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   String? _vornameFehler;
   String? _nachnameFehler;
+  late bool _appLock = profileController.profile.appLock;
 
   @override
   void dispose() {
@@ -38,6 +40,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _nachname.dispose();
     _email.dispose();
     super.dispose();
+  }
+
+  /// Einschalten nur, wenn das Geraet ueberhaupt sperren kann. Sonst haette
+  /// der Nutzer eine Sperre, die ihn aussperrt statt zu schuetzen.
+  Future<void> _sperreUmschalten(bool wert) async {
+    if (!wert) {
+      setState(() => _appLock = false);
+      return;
+    }
+    final moeglich = await sperrController.istMoeglich();
+    if (!mounted) return;
+    if (!moeglich) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Auf diesem Gerät ist weder Fingerabdruck noch Code '
+            'eingerichtet. Richte das zuerst in den Systemeinstellungen ein.'),
+      ));
+      return;
+    }
+    setState(() => _appLock = true);
   }
 
   Future<void> _speichern() async {
@@ -54,6 +75,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       firstName: vorname,
       lastName: nachname,
       email: _email.text.trim(),
+      appLock: _appLock,
     ));
     if (!mounted) return;
 
@@ -121,6 +143,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         helperText: 'Nur für eine Kopie an dich selbst.',
                       ),
                     ),
+                    // Beim ersten Start nicht: Da geht es um den Namen,
+                    // nicht um Einstellungen.
+                    if (!widget.firstRun) ...[
+                      const SizedBox(height: 8),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        value: _appLock,
+                        onChanged: _sperreUmschalten,
+                        title: const Text('App sperren',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                        subtitle: const Text(
+                          'Fragt beim Start und nach jeder Pause nach Fingerabdruck, '
+                          'Gesicht oder dem Code deines Geräts.',
+                          style: TextStyle(fontSize: 12, color: AppColors.slate600, height: 1.4),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     Container(
                       padding: const EdgeInsets.all(14),
