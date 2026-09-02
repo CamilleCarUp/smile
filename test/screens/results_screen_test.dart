@@ -3,6 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:smile/models/request.dart';
 import 'package:smile/screens/results_screen.dart';
 import 'package:smile/state/requests_repository.dart';
+import 'package:smile/state/upload_controller.dart';
+
+import '../support/fake_store.dart';
 
 DentalRequest _request({
   required bool trustworthy,
@@ -36,7 +39,14 @@ DentalRequest _request({
 }
 
 void main() {
-  tearDown(() => requestsRepository.currentRequest = null);
+  setUp(() {
+    requestsRepository = RequestsRepository(store: FakeStore());
+    uploadController.reset();
+  });
+  tearDown(() {
+    requestsRepository.currentRequest = null;
+    uploadController.reset();
+  });
 
   Future<void> zeige(WidgetTester tester, DentalRequest req) async {
     requestsRepository.currentRequest = req;
@@ -94,5 +104,42 @@ void main() {
         _request(trustworthy: false, totalsMatch: false, crooked: true));
 
     expect(find.textContaining('Grad'), findsNothing);
+  });
+
+  group('Fehlerwege', () {
+    testWidgets('ein gescheitertes Speichern wird gesagt', (tester) async {
+      // Sonst ist die Anfrage nach dem Schliessen weg, ohne dass jemand
+      // gewarnt wurde.
+      requestsRepository.saveFailed = true;
+
+      await zeige(tester, _request(trustworthy: true));
+
+      expect(find.textContaining('konnte nicht gespeichert werden'), findsOneWidget);
+      expect(find.textContaining('Speicher'), findsOneWidget);
+    });
+
+    testWidgets('ohne Speicherproblem steht dort nichts', (tester) async {
+      await zeige(tester, _request(trustworthy: true));
+
+      expect(find.textContaining('konnte nicht gespeichert werden'), findsNothing);
+    });
+
+    testWidgets('eine unlesbare Seite wird benannt', (tester) async {
+      // Ein unvollständiges Ergebnis darf nicht vollständig aussehen.
+      uploadController.unlesbareSeiten.add('seite2.jpg');
+
+      await zeige(tester, _request(trustworthy: true));
+
+      expect(find.textContaining('seite2.jpg'), findsOneWidget);
+      expect(find.textContaining('nur aus den übrigen'), findsOneWidget);
+    });
+
+    testWidgets('mehrere unlesbare Seiten werden gezählt', (tester) async {
+      uploadController.unlesbareSeiten.addAll(['a.jpg', 'b.jpg']);
+
+      await zeige(tester, _request(trustworthy: true));
+
+      expect(find.textContaining('2 Seiten konnten nicht gelesen werden'), findsOneWidget);
+    });
   });
 }

@@ -28,6 +28,36 @@ class ResultsScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
+            // Konnte der Verlauf nicht gespeichert werden, erfaehrt es der
+            // Nutzer hier -- sonst ist die Anfrage beim naechsten Start weg,
+            // ohne dass jemand gewarnt wurde.
+            if (requestsRepository.saveFailed) ...[
+              const _Hinweis(
+                icon: Icons.save_outlined,
+                warnung: true,
+                text: 'Diese Anfrage konnte nicht gespeichert werden — vermutlich ist '
+                    'der Speicher deines Geräts voll. Du kannst sie jetzt fertig '
+                    'bearbeiten und abschicken, aber nach dem Schliessen der App ist '
+                    'sie weg.',
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // Einzelne Seiten, die nicht gelesen werden konnten. Ohne diesen
+            // Hinweis saehe ein unvollstaendiges Ergebnis vollstaendig aus.
+            if (uploadController.unlesbareSeiten.isNotEmpty) ...[
+              _Hinweis(
+                icon: Icons.image_not_supported_outlined,
+                warnung: true,
+                text: uploadController.unlesbareSeiten.length == 1
+                    ? 'Von "${uploadController.unlesbareSeiten.single}" konnte nichts '
+                        'gelesen werden. Was hier steht, stammt nur aus den übrigen Seiten.'
+                    : '${uploadController.unlesbareSeiten.length} Seiten konnten nicht '
+                        'gelesen werden. Was hier steht, stammt nur aus den übrigen.',
+              ),
+              const SizedBox(height: 16),
+            ],
+
             // Mehrere Rechnungen in einem Import: Der Nutzer sieht hier die
             // erste, die uebrigen liegen im Verlauf.
             if (uploadController.erkannteRechnungen > 1) ...[
@@ -299,18 +329,25 @@ class _Betragszeile extends StatelessWidget {
 class _Hinweis extends StatelessWidget {
   final IconData icon;
   final String text;
-  const _Hinweis({required this.icon, required this.text});
+
+  /// Hebt den Hinweis hervor -- fuer die Faelle, in denen etwas fehlt oder
+  /// verlorengeht, nicht bloss erklaert wird.
+  final bool warnung;
+
+  const _Hinweis({required this.icon, required this.text, this.warnung = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration:
-          BoxDecoration(color: AppColors.slate50, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+          color: warnung ? const Color(0xFFFEF2F2) : AppColors.slate50,
+          border: warnung ? Border.all(color: AppColors.danger.withValues(alpha: 0.3)) : null,
+          borderRadius: BorderRadius.circular(12)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: AppColors.slate400),
+          Icon(icon, size: 18, color: warnung ? AppColors.danger : AppColors.slate400),
           const SizedBox(width: 10),
           Expanded(
             child: Text(text,

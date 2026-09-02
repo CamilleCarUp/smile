@@ -74,6 +74,24 @@ void main() {
       final file = uploadController.currentUploadFiles.single;
       expect(file.ocrPage, isNull);
       expect(file.recognizedText, contains('Fehler bei der Texterkennung'));
+      // Und die Seite wird benannt: Ein unvollstaendiges Ergebnis darf nicht
+      // vollstaendig aussehen.
+      expect(uploadController.unlesbareSeiten, ['kaputt.jpg']);
+    });
+
+    test('gelingt die Erkennung, bleibt die Liste der unlesbaren Seiten leer', () async {
+      uploadController.addUploadedFile('gut.jpg', path: '/tmp/gut.jpg');
+
+      await uploadController.runOcrOnUploads((path) async => OcrPage(
+            sourceName: path,
+            lines: const [
+              OcrTextLine(
+                  text: '4.5350 Kompositfüllung',
+                  box: OcrBox(left: 0, top: 0, right: 100, bottom: 20)),
+            ],
+          ));
+
+      expect(uploadController.unlesbareSeiten, isEmpty);
     });
 
     test('processUpload legt eine Anfrage mit den hochgeladenen Dateien an', () async {

@@ -25,6 +25,7 @@ class UploadController extends ChangeNotifier {
 
   void reset() {
     currentUploadFiles.clear();
+    unlesbareSeiten.clear();
     notifyListeners();
   }
 
@@ -34,7 +35,15 @@ class UploadController extends ChangeNotifier {
   /// [recognize] wird bewusst hereingereicht statt fest verdrahtet: im Test
   /// laesst sich so eine aufgezeichnete Erkennung einsetzen, ohne dass ein
   /// Geraet oder ML Kit noetig waere.
+  /// Seiten, an denen die Texterkennung gescheitert ist.
+  ///
+  /// Bei drei Fotos, von denen eines unlesbar war, hat die App frueher zwei
+  /// ausgewertet und ueber das dritte geschwiegen -- das Ergebnis sah
+  /// vollstaendig aus, war es aber nicht.
+  final List<String> unlesbareSeiten = [];
+
   Future<void> runOcrOnUploads(Future<OcrPage> Function(String path) recognize) async {
+    unlesbareSeiten.clear();
     for (final f in currentUploadFiles) {
       if (f.path == null) continue;
       try {
@@ -44,6 +53,7 @@ class UploadController extends ChangeNotifier {
       } catch (e) {
         f.ocrPage = null;
         f.recognizedText = '(Fehler bei der Texterkennung: $e)';
+        unlesbareSeiten.add(f.name);
       }
     }
     notifyListeners();

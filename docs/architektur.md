@@ -68,9 +68,26 @@ Grösse nicht nötig.
 > `test/screens/upload_screen_test.dart`.
 
 ### `services/`
-- `ocr_service.dart` — Google ML Kit Texterkennung, komplett offline
-- `pdf_service.dart` — rendert PDF-Seiten via `pdfx` zu PNGs (2×-Auflösung),
-  damit die OCR sie lesen kann
+
+`ocr_service` (ML Kit), `pdf_service` (Seiten zu Bildern) und `fehlertexte`
+(Meldungen, die dem Nutzer sagen, was er tun kann).
+
+Zu den Fehlerwegen drei Entscheide:
+
+- **Die Meldung nennt den Ausweg.** Statt `PlatformException(camera_access_denied)`
+  steht da, wo man den Zugriff freigibt — und dass die Galerie auch geht. Die
+  technische Ursache bleibt dran, klein und am Schluss.
+- **Höchstens 20 PDF-Seiten.** Ein 40-seitiges Dokument wären gut hundert
+  Megabyte Zwischenbilder und einige Minuten Texterkennung, während derer die
+  App stumm dasteht. Was aufbereitet wurde, sagt sie; ein Fortschritt
+  ("Seite 7 von 20") zeigt, dass sie noch lebt.
+- **Aufgeräumt wird vor dem nächsten Import, nicht nach dem laufenden.**
+  Solange die App läuft, zeigen die erfassten Seiten noch auf diese Dateien.
+  So bleibt höchstens ein Import lang etwas liegen.
+
+Was nicht gelesen werden konnte, steht im Ergebnis: gescheitertes Speichern
+(sonst ist der Verlauf nach dem Schliessen weg, ohne Warnung) und einzelne
+unlesbare Seiten (sonst sähe ein unvollständiges Ergebnis vollständig aus).
 
 ### `data/ombudsman_data.dart`
 Die 21 kantonalen SSO-Ombudsstellen als Konstante.

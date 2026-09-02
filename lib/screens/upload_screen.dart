@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import '../services/fehlertexte.dart';
 import '../services/ocr_service.dart';
 import '../services/pdf_service.dart';
 import '../state/upload_controller.dart';
@@ -22,6 +23,21 @@ class _UploadScreenState extends State<UploadScreen> {
   bool _isAnalyzing = false;
   bool _isImportingPdf = false;
 
+  /// Was gerade aufbereitet wird ("Seite 7 von 40"). Ohne diese Anzeige steht
+  /// die App bei einem dicken PDF minutenlang stumm da.
+  String? _pdfFortschritt;
+
+  /// Meldungen mit Platz fuer einen ganzen Satz: Die Standard-Snackbar
+  /// schneidet lange Texte ab, und gerade die erklaeren, was zu tun ist.
+  void _melde(String text) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text(text),
+        duration: const Duration(seconds: 8),
+      ));
+  }
+
   Future<void> _takePhoto() async {
     try {
       final photo = await _picker.pickImage(source: ImageSource.camera, imageQuality: 85);
@@ -33,11 +49,7 @@ class _UploadScreenState extends State<UploadScreen> {
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Kamera-Fehler: $e')),
-        );
-      }
+      if (mounted) _melde(kameraFehlerText(e));
     }
   }
 
@@ -53,11 +65,7 @@ class _UploadScreenState extends State<UploadScreen> {
         uploadController.addUploadedFile(p.name, path: p.path);
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Galerie-Fehler: $e')),
-        );
-      }
+      if (mounted) _melde(galerieFehlerText(e));
     }
   }
 
@@ -77,23 +85,41 @@ class _UploadScreenState extends State<UploadScreen> {
         return;
       }
       setState(() => _isImportingPdf = true);
+
+      // Zwischenbilder des letzten Imports wegraeumen, bevor neue entstehen.
+      await pdfService.raeumeAuf();
+
       for (final f in result.files) {
         final path = f.path;
         if (path == null) continue;
-        final pageImages = await pdfService.renderPdfToImages(path);
-        for (var i = 0; i < pageImages.length; i++) {
-          final label = pageImages.length > 1 ? '${f.name} – Seite ${i + 1}' : f.name;
-          uploadController.addUploadedFile(label, path: pageImages[i]);
+        final seiten = await pdfService.renderPdfToImages(
+          path,
+          fortschritt: (fertig, gesamt) {
+            if (mounted) {
+              setState(() => _pdfFortschritt = 'Seite $fertig von $gesamt');
+            }
+          },
+        );
+        for (var i = 0; i < seiten.pfade.length; i++) {
+          final label =
+              seiten.pfade.length > 1 ? '${f.name} – Seite ${i + 1}' : f.name;
+          uploadController.addUploadedFile(label, path: seiten.pfade[i]);
+        }
+        if (seiten.begrenzt && mounted) {
+          _melde('${f.name} hat ${seiten.seitenImDokument} Seiten. Smile hat die '
+              'ersten ${seiten.pfade.length} aufbereitet — eine Rechnung ist selten '
+              'länger. Fehlt etwas, importiere den Rest als eigene Datei.');
         }
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('PDF-Fehler: $e')),
-        );
-      }
+      if (mounted) _melde(pdfFehlerText(e));
     } finally {
-      if (mounted) setState(() => _isImportingPdf = false);
+      if (mounted) {
+        setState(() {
+          _isImportingPdf = false;
+          _pdfFortschritt = null;
+        });
+      }
     }
   }
 
@@ -145,7 +171,8 @@ class _UploadScreenState extends State<UploadScreen> {
                       _PickerTile(
                         icon: Icons.picture_as_pdf_outlined,
                         label: _isImportingPdf ? 'PDF wird eingelesen…' : 'PDF-Datei auswählen',
-                        sublabel: 'Mehrseitige PDFs werden automatisch aufgeteilt',
+                        sublabel: _pdfFortschritt ??
+                            'Mehrseitige PDFs werden automatisch aufgeteilt',
                         onTap: _isImportingPdf ? () {} : _pickPdf,
                         loading: _isImportingPdf,
                       ),

@@ -79,6 +79,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ));
     if (!mounted) return;
 
+    // Scheitert das Schreiben -- meist ein voller Speicher --, darf die App
+    // nicht "Gespeichert." melden und weitergehen: Der Name steht dann beim
+    // naechsten Start nicht unter der Rueckfrage.
+    if (profileController.saveFailed) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Konnte nicht gespeichert werden — vermutlich ist der Speicher '
+            'deines Geräts voll. Schaff etwas Platz frei und versuch es nochmals.'),
+        duration: Duration(seconds: 8),
+      ));
+      return;
+    }
+
     if (widget.firstRun) {
       Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const WelcomeScreen()));
