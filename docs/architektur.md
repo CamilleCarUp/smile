@@ -61,6 +61,12 @@ Grösse nicht nötig.
 ### `data/ombudsman_data.dart`
 Die 21 kantonalen SSO-Ombudsstellen als Konstante.
 
+Jede Stelle nennt die Kantone, für die sie zuständig ist. Welcher Kanton das
+ist, kommt aus der Rechnung: `logic/praxis_ort.dart` liest Postleitzahl und
+Ort der Praxis aus dem Adressblock, `data/plz_verzeichnis.dart` übersetzt die
+Postleitzahl in ein Kantonskürzel. Details und die Datenquelle stehen in
+[ortsverzeichnis.md](ortsverzeichnis.md).
+
 ## Tests
 
 ```

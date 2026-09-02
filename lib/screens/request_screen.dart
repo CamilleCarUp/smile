@@ -206,7 +206,14 @@ class RequestScreen extends StatelessWidget {
                 icon: const Icon(Icons.balance_outlined, size: 18),
                 label: const Text('Ombudsstelle kontaktieren'),
                 onPressed: () => Navigator.push(
-                    context, MaterialPageRoute(builder: (_) => const OmbudsmanScreen())),
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => OmbudsmanScreen(
+                              praxisKanton: req.dentistCanton,
+                              praxisOrt: req.dentistPostalCode == null
+                                  ? req.dentistCity
+                                  : '${req.dentistPostalCode} ${req.dentistCity ?? ''}'.trim(),
+                            ))),
               ),
             ],
           ),

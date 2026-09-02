@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../data/swiss_cantons.dart';
 import '../models/user_profile.dart';
 import '../state/profile_controller.dart';
 import '../theme/app_theme.dart';
@@ -31,6 +32,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   String? _vornameFehler;
   String? _nachnameFehler;
+  late String _kanton = profileController.profile.canton;
 
   @override
   void dispose() {
@@ -54,6 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       firstName: vorname,
       lastName: nachname,
       email: _email.text.trim(),
+      canton: _kanton,
     ));
     if (!mounted) return;
 
@@ -73,74 +76,103 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: widget.firstRun
           ? AppBar(title: const Text('Willkommen bei Smile'), automaticallyImplyLeading: false)
           : smileAppBar(context, 'Meine Angaben', showHome: true),
+      // Der Knopf haengt am unteren Rand, nicht am Ende der Liste: Auf einem
+      // kleinen Telefon stuende er sonst unter dem Sichtfeld, und beim ersten
+      // Start kaeme man ohne Scrollen nicht weiter.
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(20),
+        child: Column(
           children: [
-            Text(
-              widget.firstRun
-                  ? 'Bevor es losgeht: Wie heisst du? Dein Name steht als Unterschrift '
-                      'unter der Rückfrage an die Praxis — ein unsignierter Brief wirkt '
-                      'unseriös und bleibt oft unbeantwortet.'
-                  : 'Diese Angaben bleiben auf deinem Gerät und werden nur für den '
-                      'Anfragetext verwendet.',
-              style: const TextStyle(fontSize: 13, color: AppColors.slate600, height: 1.45),
-            ),
-            const SizedBox(height: 24),
-            TextField(
-              controller: _vorname,
-              textCapitalization: TextCapitalization.words,
-              textInputAction: TextInputAction.next,
-              decoration: InputDecoration(
-                labelText: 'Vorname',
-                errorText: _vornameFehler,
-              ),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _nachname,
-              textCapitalization: TextCapitalization.words,
-              textInputAction: TextInputAction.next,
-              decoration: InputDecoration(
-                labelText: 'Nachname',
-                errorText: _nachnameFehler,
-              ),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _email,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'E-Mail (freiwillig)',
-                helperText: 'Nur für eine Kopie an dich selbst.',
-              ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                  color: AppColors.slate50, borderRadius: BorderRadius.circular(12)),
-              child: const Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(20),
                 children: [
-                  Icon(Icons.info_outline_rounded, size: 16, color: AppColors.slate400),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Als Absender brauchst du die Adresse nicht: Smile verschickt nicht '
-                      'selbst, sondern öffnet deine Mail-App. Der Absender kommt von dort, '
-                      'und die gesendete Nachricht liegt anschliessend in deinem Ordner '
-                      '"Gesendet". Alle Angaben bleiben auf diesem Gerät.',
-                      style: TextStyle(fontSize: 12, color: AppColors.slate600, height: 1.4),
+                    Text(
+                      widget.firstRun
+                          ? 'Bevor es losgeht: Wie heisst du? Dein Name steht als Unterschrift '
+                              'unter der Rückfrage an die Praxis — ein unsignierter Brief wirkt '
+                              'unseriös und bleibt oft unbeantwortet.'
+                          : 'Diese Angaben bleiben auf deinem Gerät und werden nur für den '
+                              'Anfragetext verwendet.',
+                      style: const TextStyle(fontSize: 13, color: AppColors.slate600, height: 1.45),
                     ),
-                  ),
+                    const SizedBox(height: 24),
+                    TextField(
+                      controller: _vorname,
+                      textCapitalization: TextCapitalization.words,
+                      textInputAction: TextInputAction.next,
+                      decoration: InputDecoration(
+                        labelText: 'Vorname',
+                        errorText: _vornameFehler,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: _nachname,
+                      textCapitalization: TextCapitalization.words,
+                      textInputAction: TextInputAction.next,
+                      decoration: InputDecoration(
+                        labelText: 'Nachname',
+                        errorText: _nachnameFehler,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    DropdownButtonFormField<String>(
+                      initialValue: _kanton.isEmpty ? null : _kanton,
+                      isExpanded: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Kanton (freiwillig)',
+                        helperText: 'Nur als Notbehelf: Normalerweise liest Smile den Ort '
+                            'der Praxis aus der Rechnung.',
+                      ),
+                      items: [
+                        for (final k in swissCantons)
+                          DropdownMenuItem(value: k.code, child: Text('${k.name} (${k.code})')),
+                      ],
+                      onChanged: (wert) => setState(() => _kanton = wert ?? ''),
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: _email,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        labelText: 'E-Mail (freiwillig)',
+                        helperText: 'Nur für eine Kopie an dich selbst.',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                          color: AppColors.slate50, borderRadius: BorderRadius.circular(12)),
+                      child: const Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.info_outline_rounded, size: 16, color: AppColors.slate400),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Als Absender brauchst du die Adresse nicht: Smile verschickt nicht '
+                              'selbst, sondern öffnet deine Mail-App. Der Absender kommt von dort, '
+                              'und die gesendete Nachricht liegt anschliessend in deinem Ordner '
+                              '"Gesendet". Alle Angaben bleiben auf diesem Gerät.',
+                              style: TextStyle(fontSize: 12, color: AppColors.slate600, height: 1.4),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
-            const SizedBox(height: 28),
-            ElevatedButton(
-              onPressed: _speichern,
-              child: Text(widget.firstRun ? "Los geht's" : 'Speichern'),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _speichern,
+                  child: Text(widget.firstRun ? "Los geht's" : 'Speichern'),
+                ),
+              ),
             ),
           ],
         ),

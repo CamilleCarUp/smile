@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'data/plz_verzeichnis.dart';
 import 'screens/profile_screen.dart';
 import 'screens/welcome_screen.dart';
 import 'state/profile_controller.dart';
@@ -13,6 +14,8 @@ Future<void> main() async {
   // Scheitert das Laden, startet die App trotzdem: lieber ohne Verlauf als
   // gar nicht.
   try {
+    // Postleitzahl -> Kanton, fuer die zustaendige Ombudsstelle.
+    await PlzVerzeichnis.laden();
     await profileController.load();
     await requestsRepository.load();
   } catch (_) {}

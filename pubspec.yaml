@@ -69,6 +69,7 @@ flutter:
 
   assets:
     - assets/reference-data/dentotar_seed.json
+    - assets/reference-data/plz_kantone.csv
 
   # To add assets to your application, add an assets section, like this:
   # assets:

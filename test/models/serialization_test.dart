@@ -13,6 +13,9 @@ void main() {
       dentistName: 'Dr. med. dent. Max Muster',
       dentistAddress: 'Alte Gasse 13, 8005 Zürich',
       dentistEmail: 'test@zahnarzt.ch',
+      dentistPostalCode: '8005',
+      dentistCity: 'Zürich',
+      dentistCanton: 'ZH',
       date: DateTime(2026, 2, 16),
       status: RequestStatus.sent,
       lines: const [
@@ -50,6 +53,11 @@ void main() {
       expect(restored.id, 42);
       expect(restored.invoiceNumber, '112233');
       expect(restored.dentistEmail, 'test@zahnarzt.ch');
+      // Der Kanton der Praxis wird mitgespeichert, damit eine alte Rechnung
+      // nach einem Update des Verzeichnisses dieselbe Ombudsstelle nennt.
+      expect(restored.dentistPostalCode, '8005');
+      expect(restored.dentistCity, 'Zürich');
+      expect(restored.dentistCanton, 'ZH');
       expect(restored.date, DateTime(2026, 2, 16));
       expect(restored.status, RequestStatus.sent);
     });
@@ -83,11 +91,22 @@ void main() {
   group('UserProfile', () {
     test('überlebt eine Rundreise', () {
       const original = UserProfile(
-          firstName: 'Toni', lastName: 'Maloni', email: 'toni@beispiel.ch');
+          firstName: 'Toni',
+          lastName: 'Maloni',
+          email: 'toni@beispiel.ch',
+          canton: 'ZH');
       final restored = UserProfile.fromJson(original.toJson());
       expect(restored.firstName, 'Toni');
       expect(restored.lastName, 'Maloni');
       expect(restored.email, 'toni@beispiel.ch');
+      expect(restored.canton, 'ZH');
+    });
+
+    test('der Kanton bleibt freiwillig', () {
+      const ohneKanton = UserProfile(firstName: 'Toni', lastName: 'Maloni');
+      expect(ohneKanton.isComplete, isTrue,
+          reason: 'Ohne Kanton kommt man weiter — er ist eine Bequemlichkeit.');
+      expect(ohneKanton.hasCanton, isFalse);
     });
 
     test('gilt erst mit Vor- UND Nachname als vollständig', () {

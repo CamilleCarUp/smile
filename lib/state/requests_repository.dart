@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
+import '../data/plz_verzeichnis.dart';
 import '../data/secure_store.dart';
 import '../logic/invoice_matcher.dart';
+import '../logic/praxis_ort.dart';
 import '../models/request.dart';
 
 /// Verwaltet die Liste erfasster/gesendeter/abgeschlossener Anfragen.
@@ -66,6 +68,12 @@ class RequestsRepository extends ChangeNotifier {
     // Ohne Kopfdaten liegt eine Demo-Auswertung vor -- dann die Werte aus dem
     // Klickdummy. Bei einer echten Rechnung wird uebernommen, was gelesen
     // wurde; was fehlt, wird als fehlend benannt statt erfunden.
+    // Ort der Praxis: aus der Rechnung gelesen, in der Demo-Auswertung aus
+    // der Beispieladresse.
+    final praxisOrt = header == null
+        ? PraxisOrt.ausAdresse('Alte Gasse 13, 8005 Zürich')
+        : header.dentistPlace;
+
     final req = DentalRequest(
       id: DateTime.now().millisecondsSinceEpoch,
       filename: '$primaryName$suffix',
@@ -84,6 +92,14 @@ class RequestsRepository extends ChangeNotifier {
       invoiceTotal: analysis.invoiceTotal,
       referenceTotal: analysis.referenceTotal,
       dentistEmail: header?.dentistEmail,
+      // Aus dem Briefkopf gelesen; der Kanton kommt aus dem
+      // Ortschaftenverzeichnis. Ist es nicht geladen oder die Postleitzahl
+      // unbekannt, bleibt der Kanton leer und die Ombudsstelle richtet sich
+      // nach dem Profil.
+      dentistPostalCode: praxisOrt?.plz,
+      dentistCity: praxisOrt?.ort,
+      dentistCanton: PlzVerzeichnis.aktuell
+          .kanton(plz: praxisOrt?.plz, ort: praxisOrt?.ort),
       factor: analysis.factor,
       statedTotal: analysis.statedTotal,
       totalsMatch: analysis.totalsMatch,

@@ -97,6 +97,14 @@ class DentalRequest {
   /// heraussuchen zu lassen.
   String? dentistEmail;
 
+  /// Postleitzahl, Ort und daraus abgeleiteter Kanton der Praxis.
+  /// Der Kanton wird bei der Erfassung einmal bestimmt und mitgespeichert,
+  /// damit ein spaeter aktualisiertes Verzeichnis eine alte Rechnung nicht
+  /// nachtraeglich anders beantwortet.
+  String? dentistPostalCode;
+  String? dentistCity;
+  String? dentistCanton;
+
   /// Ermittelter Faktor zwischen Taxpunkten und Franken.
   /// Nicht als "Taxpunktwert der Praxis" beschriften: fuer Privatpatienten
   /// sind die Taxpunkte selbst eine Spanne, erst darauf wirkt der
@@ -132,6 +140,9 @@ class DentalRequest {
     required this.invoiceTotal,
     required this.referenceTotal,
     this.dentistEmail,
+    this.dentistPostalCode,
+    this.dentistCity,
+    this.dentistCanton,
     this.factor,
     this.statedTotal,
     this.totalsMatch = false,
@@ -148,6 +159,9 @@ class DentalRequest {
         'dentistName': dentistName,
         'dentistAddress': dentistAddress,
         'dentistEmail': dentistEmail,
+        'dentistPostalCode': dentistPostalCode,
+        'dentistCity': dentistCity,
+        'dentistCanton': dentistCanton,
         'date': date.toIso8601String(),
         'status': status.name,
         'lines': lines.map((l) => l.toJson()).toList(),
@@ -171,6 +185,9 @@ class DentalRequest {
         dentistName: json['dentistName'] as String,
         dentistAddress: json['dentistAddress'] as String,
         dentistEmail: json['dentistEmail'] as String?,
+        dentistPostalCode: json['dentistPostalCode'] as String?,
+        dentistCity: json['dentistCity'] as String?,
+        dentistCanton: json['dentistCanton'] as String?,
         date: DateTime.parse(json['date'] as String),
         status: RequestStatus.values.firstWhere(
           (s) => s.name == json['status'],
@@ -201,10 +218,19 @@ class OmbudsmanContact {
   final String name;
   final String location;
   final String phone;
+
+  /// Kantonskuerzel, fuer die diese Stelle zustaendig ist. Meist genau eines,
+  /// St. Gallen deckt zusaetzlich beide Appenzell ab.
+  final List<String> cantons;
+
   const OmbudsmanContact({
     required this.region,
     required this.name,
     required this.location,
     required this.phone,
+    this.cantons = const [],
   });
+
+  bool covers(String? cantonCode) =>
+      cantonCode != null && cantons.contains(cantonCode);
 }

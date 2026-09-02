@@ -1,4 +1,5 @@
 import '../models/ocr_result.dart';
+import 'praxis_ort.dart';
 
 /// Rekonstruiert aus einer Texterkennung die Struktur einer Zahnarztrechnung.
 ///
@@ -62,6 +63,12 @@ class ParsedInvoiceHeader {
   final String? dentistName;
   final String? dentistAddress;
   final String? dentistEmail;
+
+  /// Postleitzahl und Ort der Praxis, aus dem Adressblock gelesen. Daran
+  /// haengt die zustaendige Ombudsstelle -- deshalb wird nur der Block der
+  /// Praxis durchsucht und nicht die ganze Seite, auf der auch die Adresse
+  /// des Patienten steht.
+  final PraxisOrt? dentistPlace;
   final String? invoiceNumber;
   final String? patient;
   final DateTime? date;
@@ -70,6 +77,7 @@ class ParsedInvoiceHeader {
     this.dentistName,
     this.dentistAddress,
     this.dentistEmail,
+    this.dentistPlace,
     this.invoiceNumber,
     this.patient,
     this.date,
@@ -506,6 +514,7 @@ class InvoiceParser {
       dentistName: nameCell?.text.trim(),
       dentistAddress: address,
       dentistEmail: email,
+      dentistPlace: PraxisOrt.ausAdresse(address),
       invoiceNumber: valueAfterLabel('referenz'),
       patient: valueAfterLabel('patient'),
       date: date,
