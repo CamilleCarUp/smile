@@ -83,6 +83,55 @@ Der Resolver erkennt diesen Fall und meldet ihn
 Taxpunktwert, weil dieser die kleineren Mengen ergibt: lieber eine doppelte
 Verrechnung übersehen als eine behaupten, die es nicht gibt.
 
+## Gegenprobe am amtlichen Tarif (Tarif 222, V2.00 / 1.1.2025)
+
+Der Offline-Tarifbrowser wurde eingesehen — was er ausdrücklich erlaubt.
+Übernommen wurde nichts. Festgehalten sind hier nur Feststellungen über
+unser eigenes Rechenmodell:
+
+**Das Taxpunkte-Band für Privatpatienten ist bestätigt.** Der Tarif führt zu
+jeder Position drei Werte: `TP (UV/MV/IV)` als Mittelwert sowie `TP (PP) max`
+und `TP (PP) min`. Über die eingesehenen Positionen liegt das Verhältnis
+konstant bei 1.150 nach oben und 0.850 nach unten — bei 4.0020
+(Kurzbefundaufnahme, in unserem Seed mit 33.1) sind es 38.10 und 28.10, also
+1.1511 und 0.8489. Unser `taxpunkteMaxAufschlag = 1.16` ist damit als
+sichere Obergrenze belegt und nicht mehr geschätzt. Und die Beobachtung an
+den echten Rechnungen — dieselbe Position einmal mit 181.3, einmal mit 208.5,
+Verhältnis exakt 1.15 — ist der Tarif selbst, nicht ein Zufall.
+
+**Die Qualifikationsstufen sind bestätigt.** Kapitel 02.03 führt vier
+getrennte Positionen für dieselbe Arbeit, je nach behandelnder Person, alle
+im Zeittarif pro 5 Minuten: Praktikantin PA, PA, Praktikantin DH, DH — mit
+steigenden Taxpunkten. Die App sieht also am Code, welche Stufe verrechnet
+wurde; wer tatsächlich am Stuhl stand, weiss nur der Patient.
+
+**Die Zuständigkeit ist bestätigt.** Das Titelblatt hält fest, dass die SSO
+Herausgeberin der Kalkulationshilfe für Privatpatienten (DENTOTAR®) ist und
+dass deren Nutzungsbestimmungen über sso.ch erhältlich sind. Genau die
+gehören vor die Anfrage — möglicherweise steht die Antwort dort schon.
+
+## Regel 2 braucht keine Statistik, sondern den Tarif
+
+Diese Feststellung korrigiert einen früheren Plan. Angenommen war, für Regel
+2 brauche es erhobene Behandlungsmuster — wie oft eine Leistung *üblich*
+ist. Der Tarif enthält stattdessen **harte Limitationen im Klartext**, je
+Position:
+
+- „Darf pro Patient innerhalb von 12 Monaten in der gleichen Praxis nur 1 mal
+  verrechnet werden."
+- „Maximal 6 mal pro Sitzung verrechenbar."
+- „Maximal 30 Minuten pro Sitzung; maximal 4 mal pro Jahr verrechenbar."
+- „Leistung X ist nicht kumulierbar mit Leistung Y."
+
+Das sind prüfbare Regeln, keine Erwartungswerte. Regel 2 wird damit
+deterministisch und belegbar — von derselben Art wie Regel 1, nicht von der
+Art „das kommt uns viel vor". Was fehlt, ist ausschliesslich das Recht, diese
+Angaben zu verwenden.
+
+Für die Anfrage heisst das: Die Limitationen und Kumulationsverbote sind
+genauso wichtig wie Positionsnummer und Taxpunkte — und sie liegen bereits
+strukturiert vor.
+
 ## Wenn die Rechte da sind: zwei Dinge, nicht eines
 
 Mit den Nutzungsrechten kommt der **Katalog** — Code, Bezeichnung, Taxpunkte,

@@ -65,14 +65,16 @@ Was schon da ist: Der Resolver ermittelt die Mengen zuverlässig — auf der
 Testrechnung erkennt er die zweifache Anästhesie korrekt, auch ohne
 Referenzdatenbank.
 
-**Was fehlt: die erwarteten Mengen je Behandlungsmuster.** Die Referenzdatei
-listet zu jedem Muster die Codes, aber nicht, wie oft jeder davon vorgesehen
-ist. Diese Zahlen dürfen nicht geschätzt werden — sie müssen aus der Thesis
-oder von zahnmedizinischer Seite kommen.
+**Was fehlt, ist nur das Recht — nicht das Wissen.** Der amtliche Tarif
+enthält je Position ausformulierte Limitationen: „nur 1 mal innerhalb von 12
+Monaten", „maximal 6 mal pro Sitzung", „nicht kumulierbar mit Leistung X".
+Das sind prüfbare Regeln, keine Erwartungswerte — Regel 2 wird damit
+deterministisch und belegbar, von derselben Art wie Regel 1. Eine Erhebung
+über „übliche" Mengen braucht es dafür nicht.
 
-Voraussetzungen, bevor gebaut wird:
-1. Erwartete Mengen je Muster, belastbar belegt
-2. Geklärte Nutzungsrechte am Tarif (siehe [tarifdaten.md](tarifdaten.md))
+Voraussetzung, bevor gebaut wird:
+1. Geklärte Nutzungsrechte am Tarif, **einschliesslich der Limitationen und
+   Kumulationsverbote** (siehe [tarifdaten.md](tarifdaten.md))
 
 Der Platz im Code ist markiert: `lib/logic/invoice_rules.dart`, unterhalb von
 Regel 1. Die Markierung erklärt dort auch, warum die Regel absichtlich fehlt —
