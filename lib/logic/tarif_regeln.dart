@@ -81,6 +81,13 @@ class TarifRegeln {
             '${tpEffektiv.toStringAsFixed(1)}. Zum Höchstsatz läge die Position bei '
             'rund CHF ${zulaessig.toStringAsFixed(2)} statt '
             'CHF ${line.amountChf.toStringAsFixed(2)}.',
+        frage: 'Bei Position ${line.code}'
+            '${line.description.isEmpty ? '' : ' «${line.description}»'} sind '
+            '${tpEffektiv.toStringAsFixed(1)} Taxpunkte verrechnet. Nach meinem '
+            'Verständnis lässt der Tarif für Privatpatienten hier höchstens '
+            '${max.toStringAsFixed(1)} Taxpunkte zu; das ergäbe rund '
+            'CHF ${zulaessig.toStringAsFixed(2)} statt der verrechneten '
+            'CHF ${line.amountChf.toStringAsFixed(2)}.',
         observed: tpEffektiv,
         allowed: max,
         excessChf: line.amountChf - zulaessig,
@@ -114,6 +121,10 @@ class TarifRegeln {
                 '«${limit.wortlaut}»'
                 '${sitzung.datum == null ? '' : ' Auf dieser Rechnung steht sie für den '
                     '${_tag(sitzung.datum!)} $anzahl mal.'}',
+            frage: 'Position $code «${eintrag.description}» ist '
+                '${sitzung.datum == null ? '' : 'für den ${_tag(sitzung.datum!)} '}'
+                '$anzahl mal verrechnet. Der Tarif hält dazu fest: '
+                '«${limit.wortlaut}»',
             observed: anzahl.toDouble(),
             allowed: limit.maxAnzahl.toDouble(),
           ));
@@ -149,6 +160,10 @@ class TarifRegeln {
                 'stehen zusammen auf dieser Rechnung'
                 '${sitzung.datum == null ? '' : ' für den ${_tag(sitzung.datum!)}'}. '
                 'Der Tarif lässt sie nicht zusammen zu.',
+            frage: 'Die Positionen ${eintrag.code} «${eintrag.description}» und '
+                '$anderer «${zweiter?.description ?? anderer}» sind zusammen '
+                'verrechnet. Nach meinem Verständnis lässt der Tarif diese '
+                'Kombination nicht zu.',
           ));
         }
       }
@@ -206,6 +221,9 @@ class TarifRegeln {
               'In deinem Verlauf steht dieselbe Position bereits vom '
               '${_tag(letzte!)}. Smile sieht das, weil deine Rechnungen auf '
               'diesem Gerät liegen — der Praxis ist es womöglich entgangen.',
+          frage: 'Position $code «${eintrag.description}» wurde mir bereits am '
+              '${_tag(letzte)} in Rechnung gestellt. Der Tarif hält dazu fest: '
+              '«${limit.wortlaut}»',
           observed: (frueher + jetzt).toDouble(),
           allowed: limit.maxAnzahl.toDouble(),
         ));

@@ -21,12 +21,31 @@ class RequestScreen extends StatelessWidget {
   /// waere bei jeder zweiten Praxis schlicht falsch.
   String _anrede(DentalRequest req) => 'Sehr geehrte Damen und Herren';
 
+  /// Die Befunde, wie sie im Brief stehen.
+  ///
+  /// Alle, nicht nur der erste: Wer zwei Punkte hat und nur einen anspricht,
+  /// muss ein zweites Mal schreiben. Und in der Fassung fuer die Praxis --
+  /// sachlich, in der dritten Person, mit "nach meinem Verstaendnis" statt
+  /// einer Feststellung. Die App weiss, was sie gerechnet hat; ob es Gruende
+  /// gibt, die sie nicht kennt, weiss sie nicht.
   String _grund(DentalRequest req) {
-    if (req.findings.isNotEmpty) {
-      final f = req.findings.first;
-      return '${f.explanation}\n\n'
+    final befunde = req.findings;
+
+    if (befunde.length == 1) {
+      return '${befunde.single.frage ?? befunde.single.explanation}\n\n'
           'Könnten Sie mir erläutern, wie der Betrag zustande kommt?';
     }
+
+    if (befunde.length > 1) {
+      final punkte = <String>[
+        for (var i = 0; i < befunde.length; i++)
+          '${i + 1}. ${befunde[i].frage ?? befunde[i].explanation}',
+      ].join('\n\n');
+      return 'Beim Nachvollziehen sind mir folgende Punkte aufgefallen:\n\n'
+          '$punkte\n\n'
+          'Könnten Sie mir erläutern, wie diese Beträge zustande kommen?';
+    }
+
     final flagged = req.flaggedLines;
     if (flagged.isNotEmpty) {
       final l = flagged.first;
@@ -46,7 +65,9 @@ class RequestScreen extends StatelessWidget {
       req.isTrustworthy ? req.flaggedLines : const [];
 
   String _mailText(DentalRequest req) {
-    final positionen = _positionen(req);
+    // Ohne Befunde die auffaelligen Positionen aufzaehlen; mit Befunden nicht,
+    // die nennen ihre Position ohnehin beim Namen.
+    final positionen = req.findings.isEmpty ? _positionen(req) : const <TariffLine>[];
     final aufzaehlung = positionen.isEmpty
         ? ''
         : 'Konkret geht es um:\n${positionen.map((l) => '- ${l.code} ${l.description}').join('\n')}\n\n';

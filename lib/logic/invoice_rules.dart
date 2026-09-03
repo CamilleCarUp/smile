@@ -74,6 +74,12 @@ class InvoiceRules {
             'Bei ${maxErlaubterFaktor.toStringAsFixed(2)} läge die Rechnung bei rund '
             'CHF ${zulaessigeSumme.toStringAsFixed(2)} statt '
             'CHF ${invoice.sumOfLines.toStringAsFixed(2)}.',
+        frage: 'Aus den verrechneten Beträgen und den amtlichen Taxpunkten ergibt '
+            'sich ein Faktor von ${faktor.toStringAsFixed(2)} Franken je Taxpunkt. '
+            'Nach meinem Verständnis lässt der Tarif für Privatpatienten höchstens '
+            '${maxErlaubterFaktor.toStringAsFixed(2)} zu (Taxpunkte höchstens '
+            '${taxpunkteMaxAufschlag.toStringAsFixed(2)}-fach, Taxpunktwert höchstens '
+            '${taxpunktwertMax.toStringAsFixed(2)}).',
         observed: faktor,
         allowed: maxErlaubterFaktor,
         excessChf: invoice.sumOfLines - zulaessigeSumme,

@@ -448,6 +448,22 @@ class InvoiceParser {
       }
       description = description.replaceAll(RegExp(r'^[\s,;:.\-]+'), '').trim();
 
+      // Steht der Code in einer eigenen Spalte, bleibt nach dem Abziehen
+      // nichts uebrig. Dann traegt die Bezeichnung die naechste Zelle rechts,
+      // die keine Zahl ist -- sonst stuende in der App und im Mailentwurf nur
+      // die Nummer.
+      if (description.isEmpty) {
+        for (final cell in row) {
+          if (identical(cell, codeCell)) continue;
+          if (cell.box.left < codeCell.box.right) continue;
+          if (_looksNumeric.hasMatch(cell.text)) continue;
+          final text = cell.text.trim();
+          if (text.length < 3) continue;
+          description = text;
+          break;
+        }
+      }
+
       final numbers = <NumberField>[];
       for (final cell in row) {
         if (identical(cell, codeCell)) continue;

@@ -34,6 +34,14 @@ class InvoiceFinding {
   /// nicht als Orakelspruch dasteht.
   final String explanation;
 
+  /// Derselbe Befund, wie er in der Rueckfrage an die Praxis steht.
+  ///
+  /// Zwei Fassungen, weil zwei Leser: Auf dem Bildschirm duzt die App ihren
+  /// Nutzer und erklaert ihm ihre Rechnung. Im Brief an die Praxis steht
+  /// dieselbe Feststellung sachlich und in der dritten Person -- und als
+  /// Frage, nicht als Vorwurf. Fehlt sie, nimmt der Brief [explanation].
+  final String? frage;
+
   /// Der beobachtete und der zulaessige Wert, fuer die Anzeige.
   final double? observed;
   final double? allowed;
@@ -45,6 +53,7 @@ class InvoiceFinding {
     required this.kind,
     required this.title,
     required this.explanation,
+    this.frage,
     this.observed,
     this.allowed,
     this.excessChf,
@@ -54,6 +63,7 @@ class InvoiceFinding {
         'kind': kind.name,
         'title': title,
         'explanation': explanation,
+        'frage': frage,
         'observed': observed,
         'allowed': allowed,
         'excessChf': excessChf,
@@ -66,6 +76,7 @@ class InvoiceFinding {
         ),
         title: json['title'] as String,
         explanation: json['explanation'] as String,
+        frage: json['frage'] as String?,
         observed: (json['observed'] as num?)?.toDouble(),
         allowed: (json['allowed'] as num?)?.toDouble(),
         excessChf: (json['excessChf'] as num?)?.toDouble(),
