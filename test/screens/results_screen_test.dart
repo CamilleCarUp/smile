@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:smile/models/finding.dart';
 import 'package:smile/models/request.dart';
 import 'package:smile/screens/results_screen.dart';
 import 'package:smile/state/requests_repository.dart';
@@ -11,6 +12,7 @@ DentalRequest _request({
   required bool trustworthy,
   bool totalsMatch = true,
   bool crooked = false,
+  List<InvoiceFinding> findings = const [],
 }) {
   return DentalRequest(
     id: 1,
@@ -35,6 +37,7 @@ DentalRequest _request({
     totalsMatch: totalsMatch,
     isTrustworthy: trustworthy,
     wasPhotographedCrooked: crooked,
+    findings: findings,
   );
 }
 
@@ -53,8 +56,27 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: const ResultsScreen()));
   }
 
-  testWidgets('bei sicherem Ergebnis führt der Hauptknopf zur Rückfrage', (tester) async {
-    await zeige(tester, _request(trustworthy: true));
+  /// Die Knöpfe stehen am Ende einer langen Liste und sind im Testfenster
+  /// nicht gebaut. Erst hinscrollen — sonst besteht eine `findsNothing`-Probe,
+  /// weil nichts da ist, statt weil nichts angeboten wird.
+  Future<void> nachUnten(WidgetTester tester, Finder ziel) => tester
+      .scrollUntilVisible(ziel, 300, scrollable: find.byType(Scrollable).first);
+
+  testWidgets('bei sicherem Ergebnis mit Befund führt der Hauptknopf zur Rückfrage',
+      (tester) async {
+    // Ohne Befund gibt es die Rückfrage nicht mehr — siehe Gruppe "ohne
+    // Befund" weiter unten.
+    await zeige(
+        tester,
+        _request(trustworthy: true, findings: const [
+          InvoiceFinding(
+            kind: FindingKind.factorAboveTariffMaximum,
+            title: 'Preisniveau über dem Höchstsatz',
+            explanation: 'Faktor 2.46 statt höchstens 1.97.',
+          ),
+        ]));
+
+    await nachUnten(tester, find.text('Rückfrage vorbereiten'));
 
     expect(find.text('Rückfrage vorbereiten'), findsOneWidget);
     expect(find.text('Rechnung neu aufnehmen'), findsNothing);
@@ -75,11 +97,7 @@ void main() {
   testWidgets('die Rückfrage bleibt als Nebenhandlung erreichbar', (tester) async {
     await zeige(tester, _request(trustworthy: false, totalsMatch: false));
 
-    await tester.scrollUntilVisible(
-      find.text('Trotzdem Rückfrage vorbereiten'),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
+    await nachUnten(tester, find.text('Trotzdem Rückfrage vorbereiten'));
     expect(find.text('Trotzdem Rückfrage vorbereiten'), findsOneWidget);
   });
 
@@ -140,6 +158,63 @@ void main() {
       await zeige(tester, _request(trustworthy: true));
 
       expect(find.textContaining('2 Seiten konnten nicht gelesen werden'), findsOneWidget);
+    });
+  });
+
+  group('ohne Befund', () {
+    testWidgets('sagt die App klar, dass nichts aufgefallen ist', (tester) async {
+      await zeige(tester, _request(trustworthy: true));
+
+      expect(find.text('Keine Auffälligkeiten gefunden'), findsOneWidget);
+      expect(find.textContaining('ist diese Rechnung stimmig'), findsOneWidget);
+    });
+
+    testWidgets('und bietet keine Rückfrage an', (tester) async {
+      // Eine App, die nach "alles in Ordnung" trotzdem einen Brief an die
+      // Praxis anbietet, erzeugt grundlose Anfragen.
+      await zeige(tester, _request(trustworthy: true));
+      await nachUnten(tester, find.text('Fertig'));
+
+      expect(find.text('Fertig'), findsOneWidget);
+      expect(find.text('Rückfrage vorbereiten'), findsNothing);
+      expect(find.text('Trotzdem Rückfrage vorbereiten'), findsNothing);
+    });
+
+    testWidgets('nennt im selben Atemzug, wofür die Entwarnung gilt', (tester) async {
+      // Ohne diesen Satz wäre die Karte genau der grüne Haken, den diese App
+      // nie zeigen wollte.
+      await zeige(tester, _request(trustworthy: true));
+
+      expect(find.textContaining('nicht, ob eine Behandlung nötig war'), findsOneWidget);
+    });
+
+    testWidgets('eine unsichere Lesung ist keine Entwarnung', (tester) async {
+      // Ohne belastbare Lesung wäre "keine Auffälligkeiten" die Aussage einer
+      // App, die die Rechnung gar nicht lesen konnte.
+      await zeige(tester, _request(trustworthy: false, totalsMatch: false));
+
+      expect(find.text('Keine Auffälligkeiten gefunden'), findsNothing);
+      await nachUnten(tester, find.text('Trotzdem Rückfrage vorbereiten'));
+      expect(find.text('Trotzdem Rückfrage vorbereiten'), findsOneWidget);
+    });
+
+    testWidgets('mit Befund bleibt es bei der Rückfrage', (tester) async {
+      await zeige(
+          tester,
+          _request(trustworthy: true, findings: const [
+            InvoiceFinding(
+              kind: FindingKind.factorAboveTariffMaximum,
+              title: 'Preisniveau über dem Höchstsatz',
+              explanation: 'Faktor 2.46 statt höchstens 1.97.',
+              observed: 2.46,
+              allowed: 1.972,
+              excessChf: 75.66,
+            ),
+          ]));
+
+      expect(find.text('Keine Auffälligkeiten gefunden'), findsNothing);
+      await nachUnten(tester, find.text('Rückfrage vorbereiten'));
+      expect(find.text('Rückfrage vorbereiten'), findsOneWidget);
     });
   });
 }

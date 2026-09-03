@@ -68,6 +68,10 @@ class ResultsScreen extends StatelessWidget {
               _UnsicherKarte(request: req),
               const SizedBox(height: 16),
             ],
+            if (req.unauffaellig) ...[
+              const _StimmigKarte(),
+              const SizedBox(height: 16),
+            ],
             for (final f in req.findings) _BefundKarte(finding: f),
             if (req.findings.isNotEmpty) const SizedBox(height: 16),
             _LesestatusKarte(
@@ -125,7 +129,8 @@ class ResultsScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 16),
-            _Hinweis(
+            if (!req.unauffaellig)
+              _Hinweis(
               icon: Icons.info_outline_rounded,
               text: req.findings.isEmpty
                   ? 'Geprüft wurde bisher nur das Preisniveau gegen den tariflichen '
@@ -135,10 +140,20 @@ class ResultsScreen extends StatelessWidget {
                   : 'Der Befund beruht auf einer Rechnung, nicht auf einer Beurteilung der '
                       'Behandlung. Es kann Gründe geben, die die App nicht kennt — deshalb '
                       'ist der nächste Schritt eine Frage an die Praxis, keine Forderung.',
-            ),
+              ),
 
             const SizedBox(height: 20),
-            if (req.isTrustworthy)
+            // Ohne Befund wird keine Rueckfrage angeboten. Eine App, die nach
+            // "alles in Ordnung" trotzdem einen Brief an die Praxis in den
+            // Vordergrund stellt, erzeugt grundlose Anfragen -- und verspielt
+            // genau die Glaubwuerdigkeit, von der die Befunde leben.
+            if (req.unauffaellig)
+              ElevatedButton(
+                onPressed: () =>
+                    Navigator.of(context).popUntil((route) => route.isFirst),
+                child: const Text('Fertig'),
+              )
+            else if (req.isTrustworthy)
               ElevatedButton(
                 onPressed: () => Navigator.push(
                     context, MaterialPageRoute(builder: (_) => const RequestScreen())),
@@ -566,6 +581,61 @@ class _MehrereKarte extends StatelessWidget {
               'liegen unter "Meine Anfragen", jede für sich geprüft.',
               style: const TextStyle(fontSize: 12, color: AppColors.slate600, height: 1.4),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Was zu sehen ist, wenn die Rechnung sauber gelesen wurde und nichts
+/// aufgefallen ist.
+///
+/// Bewusst deutlich -- wer nachrechnen laesst, will eine Antwort, nicht ein
+/// Achselzucken. Und bewusst mit der Grenze im selben Atemzug: Geprueft sind
+/// Rechenweg und Preisniveau, nicht die Behandlung. Der zweite Absatz ist
+/// nicht das Kleingedruckte, sondern der Grund, warum der erste stimmt.
+class _StimmigKarte extends StatelessWidget {
+  const _StimmigKarte();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0FDF4),
+        border: Border.all(color: AppColors.good.withValues(alpha: 0.35)),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.verified_outlined, color: AppColors.good, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text('Keine Auffälligkeiten gefunden',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: AppColors.good.withValues(alpha: 0.95))),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Die Positionen ergeben zusammen genau das ausgewiesene Total, jede Position '
+            'liess sich in Taxpunkte und Anzahl zerlegen, und das Preisniveau liegt im '
+            'Rahmen, den der Tarif für Privatpatienten zulässt. Nach dem, was Smile '
+            'nachrechnen kann, ist diese Rechnung stimmig.',
+            style: TextStyle(fontSize: 13, color: AppColors.slate700, height: 1.5),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Geprüft sind der Rechenweg und das Preisniveau — nicht, ob eine Behandlung '
+            'nötig war und nicht, ob eine Leistung öfter verrechnet wurde als üblich.',
+            style: TextStyle(fontSize: 12, color: AppColors.slate500, height: 1.45),
           ),
         ],
       ),

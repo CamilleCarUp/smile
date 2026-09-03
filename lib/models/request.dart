@@ -126,6 +126,14 @@ class DentalRequest {
   /// Belegbare Befunde zur Rechnung.
   List<InvoiceFinding> findings;
 
+  /// Sauber gelesen und nichts gefunden.
+  ///
+  /// Verlangt beides: [isTrustworthy] (alle Positionen aufgeschluesselt,
+  /// Summenprobe geht auf, Faktor eindeutig) **und** keinen Befund. Ohne die
+  /// erste Haelfte waere "keine Auffaelligkeiten" die Aussage einer App, die
+  /// die Rechnung gar nicht lesen konnte -- und damit die gefaehrlichste
+  /// Entwarnung von allen.
+
   /// Wurde die Rechnung erkennbar schief aufgenommen? Der haeufigste Grund
   /// dafuer, dass eine Lesung nicht aufgeht.
   bool wasPhotographedCrooked;
@@ -213,6 +221,8 @@ class DentalRequest {
 
   List<TariffLine> get flaggedLines => lines.where((l) => l.flagged).toList();
   List<TariffLine> get unresolvedLines => lines.where((l) => !l.isResolved).toList();
+  bool get unauffaellig => isTrustworthy && findings.isEmpty;
+
   double get difference => invoiceTotal - referenceTotal;
 }
 
