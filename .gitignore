@@ -63,3 +63,7 @@ android/.gradle/
 # Git-Historie steht, steht dort fuer immer.
 assets/reference-data/tarif_vollstaendig.json
 assets/reference-data/tarif_*.csv
+
+# Demonstrationsbelege. Enthalten Tarifpositionen samt Taxpunkten und gehoeren
+# aus demselben Grund nicht ins Repository wie die Katalogdatei.
+demo/

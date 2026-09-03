@@ -70,8 +70,11 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/reference-data/dentotar_seed.json
-    - assets/reference-data/plz_kantone.csv
+    # Als Verzeichnis, nicht als Einzeldateien: Der vollstaendige Tarif
+    # (tarif_vollstaendig.json) liegt nur lokal vor und darf nicht ins
+    # Repository -- ein fehlender Einzeleintrag liesse den Build scheitern,
+    # ein Verzeichnis nicht.
+    - assets/reference-data/
 
   # To add assets to your application, add an assets section, like this:
   # assets:

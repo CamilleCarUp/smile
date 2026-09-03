@@ -56,6 +56,26 @@ sie im Befund wörtlich zitieren können — keine Erwartungswerte:
 - Dieselbe Vorbedingung wie bei Regel 1: Wurde die Rechnung nicht belastbar
   gelesen, wird nichts behauptet.
 
+## Demonstration vor der WiKo (22.10.2026)
+
+Für die Vorführung liegen zwei Dinge **lokal** bereit, beide in `.gitignore`:
+
+- `assets/reference-data/tarif_vollstaendig.json` — 12 Positionen von rund
+  578. Die Taxpunkte der zehn Positionen, die auf vorliegenden Rechnungen
+  aufgedruckt sind, stammen von dort. Die Bandbreite für Privatpatienten ist
+  nicht abgeschrieben, sondern aus dem am Tarif überprüften Verhältnis
+  (1.15 / 0.85) gerechnet. Zwei Positionen samt dem Wortlaut ihrer
+  Limitationen wurden dem amtlichen Tarif entnommen, ausschliesslich um das
+  Regelwerk vorführen zu können.
+- `demo/` — zwei erzeugte Belege, unmissverständlich als
+  Demonstrationsbelege gekennzeichnet, mit erfundener Praxis und erfundener
+  Patientin.
+
+Das ist Absicht und gehört auf eine Folie: Wir zeigen an zwölf Positionen,
+was mit dem ganzen Katalog möglich wäre — und genau darum bitten wir. Ein
+Prototyp, der bereits 578 Positionen enthielte, würde in diesem Raum die
+falsche erste Frage auslösen.
+
 ## Vor dem Zusammenführen
 
 1. Lizenz der SSO liegt vor (siehe [tarifdaten.md](tarifdaten.md)).

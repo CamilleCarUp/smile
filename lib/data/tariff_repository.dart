@@ -8,19 +8,35 @@ import 'tariff_catalog.dart';
 /// Flutter. Faellt das Laden aus, arbeitet die App mit leerem Katalog weiter
 /// — der Resolver liest die Taxpunkte dann von der Rechnung.
 class TariffRepository {
-  static const assetPath = 'assets/reference-data/dentotar_seed.json';
+  /// Die vierzehn Positionen aus belegbaren Quellen. Liegt im Repository.
+  static const seedPath = 'assets/reference-data/dentotar_seed.json';
+
+  /// Der lizenzierte Katalog samt Bandbreite, Limitationen und
+  /// Kumulationsverboten.
+  ///
+  /// Liegt **nicht** im Repository (siehe .gitignore und
+  /// docs/tarif-branch.md). Ist die Datei da, arbeitet die App damit; fehlt
+  /// sie, bleibt es beim Seed und die erweiterten Regeln pruefen nichts.
+  static const vollstaendigPath = 'assets/reference-data/tarif_vollstaendig.json';
 
   TariffCatalog? _cached;
 
   Future<TariffCatalog> load() async {
     final cached = _cached;
     if (cached != null) return cached;
-    try {
-      final source = await rootBundle.loadString(assetPath);
-      return _cached = TariffCatalog.fromJsonString(source);
-    } catch (_) {
-      return _cached = TariffCatalog.fromEntries(const []);
+
+    // Erst der vollstaendige Katalog, dann der Seed. Kein Fehler, wenn der
+    // erste fehlt -- das ist der Normalfall ohne Lizenz.
+    for (final pfad in const [vollstaendigPath, seedPath]) {
+      try {
+        final source = await rootBundle.loadString(pfad);
+        final katalog = TariffCatalog.fromJsonString(source);
+        if (!katalog.isEmpty) return _cached = katalog;
+      } catch (_) {
+        // naechster Pfad
+      }
     }
+    return _cached = TariffCatalog.fromEntries(const []);
   }
 
   /// Nur fuer Tests.
