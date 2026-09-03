@@ -83,6 +83,32 @@ Der Resolver erkennt diesen Fall und meldet ihn
 Taxpunktwert, weil dieser die kleineren Mengen ergibt: lieber eine doppelte
 Verrechnung übersehen als eine behaupten, die es nicht gibt.
 
+## Wenn die Rechte da sind: zwei Dinge, nicht eines
+
+Mit den Nutzungsrechten kommt der **Katalog** — Code, Bezeichnung, Taxpunkte,
+und hoffentlich die Bezugsgrösse je Position. Das ist ein Import wie beim
+Ortschaftenverzeichnis: ein Werkzeug unter `tool/`, das die Quelle in eine
+abgeleitete Tabelle verwandelt, plus ein Test gegen die ausgelieferte Datei.
+Damit wird das Nachrechnen vollständig statt exemplarisch.
+
+Die **Erklärungen in `lib/data/erklaerungen.dart` kommen nicht mit.** Der
+Tarif sagt „Schmelzätzung und Anbringen des Haftvermittlers"; der Satz „der
+Zahnschmelz wird mit einem Gel angeraut, damit der Kunststoff hält" muss
+weiterhin jemand schreiben — abschreiben dürften wir ihn ohnehin nicht, und
+er wäre auch keine Erklärung.
+
+Die App verträgt dieses Gefälle: Zu einer Position ohne Erklärung sagt sie
+das, statt eine zu erfinden. Reihenfolge beim Nachziehen:
+
+1. die häufigsten Positionen — Konsultation, Röntgen, Anästhesie, Füllungen,
+   Dentalhygiene, Extraktion,
+2. was auf echten Rechnungen tatsächlich auftaucht (der beste Filter, den wir
+   haben),
+3. der Rest, nach Bedarf.
+
+Zwei Dutzend davon einmal von einer Fachperson gegenlesen zu lassen, wäre
+dieselbe Gelegenheit wie bei den Behandlungsmustern für Regel 2.
+
 ## Was vor einer Veröffentlichung nötig ist
 
 1. **Nutzungsrechte mit der SSO klären.** Ohne das geht nichts weiter — siehe
