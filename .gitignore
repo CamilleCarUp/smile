@@ -53,3 +53,13 @@ app.*.map.json
 # Gradle-Ausgaben ausserhalb des umgeleiteten Build-Ordners
 android/build/
 android/.gradle/
+
+# Lizenzierte Tarifdaten -- gehoeren NICHT ins Repository.
+#
+# Der Zahnarzttarif SSO ist urheberrechtlich geschuetzt und wird gegen Entgelt
+# lizenziert (siehe docs/tarifdaten.md). Der Code hier ist darauf vorbereitet,
+# die Daten sind es nicht: Sie werden lokal aus der lizenzierten Quelle
+# erzeugt (tool/tarif_erzeugen.dart) und bleiben lokal. Was einmal in der
+# Git-Historie steht, steht dort fuer immer.
+assets/reference-data/tarif_vollstaendig.json
+assets/reference-data/tarif_*.csv

@@ -5,6 +5,7 @@ import '../models/request.dart';
 import 'invoice_parser.dart';
 import 'invoice_resolver.dart';
 import 'invoice_rules.dart';
+import 'tarif_regeln.dart';
 
 /// Fuehrt Parser und Resolver zu dem Ergebnis zusammen, das die Screens
 /// anzeigen. Reine Logik ohne Flutter-Abhaengigkeit — testbar ohne Geraet.
@@ -57,13 +58,20 @@ class InvoiceAnalysisResult {
 /// beurteilen.
 ///
 /// Beurteilt wird nur, was sich belegen laesst — derzeit das Preisniveau
-/// gegen den tariflichen Hoechstsatz (siehe logic/invoice_rules.dart). Die
-/// mengenbezogene Pruefung gegen das Behandlungsmuster fehlt noch bewusst;
-/// die dafuer noetigen erwarteten Mengen liegen nicht belastbar vor.
-InvoiceAnalysisResult analyzeInvoice(List<OcrPage> pages, TariffCatalog catalog) {
+/// gegen den tariflichen Hoechstsatz (siehe logic/invoice_rules.dart) und --
+/// sobald der Katalog die Angaben enthaelt -- die ausformulierten
+/// Vorschriften des Tarifs (siehe logic/tarif_regeln.dart).
+///
+/// [verlauf] sind die frueheren Rechnungen des Nutzers. Sie werden nur
+/// gelesen, nie veraendert, und dienen einer einzigen Frage: Wurde eine
+/// Position innerhalb der Frist schon einmal verrechnet, die der Tarif nennt?
+InvoiceAnalysisResult analyzeInvoice(
+  List<OcrPage> pages,
+  TariffCatalog catalog, {
+  List<DentalRequest> verlauf = const [],
+}) {
   final parsed = const InvoiceParser().parse(pages);
   final resolved = const InvoiceResolver().resolve(parsed, catalog);
-  final findings = const InvoiceRules().evaluate(resolved);
 
   final lines = resolved.lines
       .map((l) => TariffLine(
@@ -76,6 +84,19 @@ InvoiceAnalysisResult analyzeInvoice(List<OcrPage> pages, TariffCatalog catalog)
             date: l.date,
           ))
       .toList();
+
+  final findings = [
+    ...const InvoiceRules().evaluate(resolved),
+    ...tarifRegeln.pruefe(
+      lines: lines,
+      katalog: catalog,
+      vertrauenswuerdig: resolved.isTrustworthy,
+      faktor: resolved.taxpunktwert,
+      rechnungsdatum: parsed.header.date,
+      praxis: parsed.header.dentistName,
+      verlauf: verlauf,
+    ),
+  ];
 
   final invoiceTotal = resolved.sumOfLines;
 

@@ -124,7 +124,11 @@ class UploadController extends ChangeNotifier {
           .toList();
       final req = requestsRepository.createFromAnalysis(
         files: [...dateien, if (erste == null) ...ohneSeiten],
-        analysis: analyzeInvoice(gruppe.seiten, katalog),
+        // Der Verlauf geht mit hinein: Nur damit laesst sich pruefen, ob
+        // eine Position innerhalb der Frist des Tarifs schon einmal
+        // verrechnet wurde.
+        analysis: analyzeInvoice(gruppe.seiten, katalog,
+            verlauf: List.of(requestsRepository.requests)),
       );
       erste ??= req;
     }

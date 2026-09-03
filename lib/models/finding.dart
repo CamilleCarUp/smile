@@ -6,6 +6,22 @@ enum FindingKind {
   /// Der Faktor zwischen Taxpunkten und Franken liegt ueber dem, was der
   /// Tarif fuer Privatpatienten zulaesst. Rein rechnerisch belegbar.
   factorAboveTariffMaximum,
+
+  /// Eine einzelne Position liegt ueber ihrer eigenen Obergrenze fuer
+  /// Privatpatienten. Genauer als der Faktor ueber die ganze Rechnung: Eine
+  /// teure Position geht im Durchschnitt sonst unter.
+  positionAboveMaximum,
+
+  /// Die Menge uebersteigt, was der Tarif fuer diese Position je Sitzung
+  /// zulaesst.
+  quantityAboveLimit,
+
+  /// Dieselbe Position wurde innerhalb der Frist schon einmal verrechnet, die
+  /// der Tarif nennt. Nur pruefbar, weil der Verlauf auf dem Geraet liegt.
+  repeatedWithinPeriod,
+
+  /// Zwei Positionen, die der Tarif nicht zusammen zulaesst.
+  notCumulable,
 }
 
 class InvoiceFinding {
