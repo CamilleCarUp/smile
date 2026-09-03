@@ -69,6 +69,10 @@ class ResolvedLine {
   final String description;
   final double amountChf;
 
+  /// Behandlungsdatum dieser Zeile, wenn die Praxis eines druckt. Erst damit
+  /// laesst sich eine Rechnung als Ablauf erzaehlen statt als Liste.
+  final DateTime? date;
+
   /// Taxpunkte aus der Referenz. Null, wenn der Code dort nicht steht.
   final double? referenceTaxpunkte;
 
@@ -86,6 +90,7 @@ class ResolvedLine {
     required this.description,
     required this.amountChf,
     required this.taxpunkteSource,
+    this.date,
     this.referenceTaxpunkte,
     this.taxpunkte,
     this.quantity,
@@ -224,6 +229,7 @@ class InvoiceResolver {
       raw.add(_RawLine(
         code: row.code,
         description: row.description,
+        date: row.date,
         amount: amount,
         catalogTaxpunkte: entry?.taxpunkte,
         invoiceTaxpunkteCandidates: tpCandidates,
@@ -246,6 +252,7 @@ class InvoiceResolver {
         code: l.code,
         description: l.description,
         amountChf: l.amount,
+        date: l.date,
         referenceTaxpunkte: l.catalogTaxpunkte,
         taxpunkte: fit?.taxpunkte,
         quantity: fit?.quantity,
@@ -453,6 +460,7 @@ class _TaxpunktwertSearch {
 }
 
 class _RawLine {
+  final DateTime? date;
   final String code;
   final String description;
   final double amount;
@@ -460,6 +468,7 @@ class _RawLine {
   final List<double> invoiceTaxpunkteCandidates;
 
   const _RawLine({
+    this.date,
     required this.code,
     required this.description,
     required this.amount,

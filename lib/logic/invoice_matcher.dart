@@ -73,6 +73,7 @@ InvoiceAnalysisResult analyzeInvoice(List<OcrPage> pages, TariffCatalog catalog)
             quantity: l.quantity,
             taxpunkte: l.taxpunkte,
             taxpunkteFromCatalog: l.taxpunkteSource == TaxpunkteSource.catalog,
+            date: l.date,
           ))
       .toList();
 

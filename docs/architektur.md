@@ -44,6 +44,22 @@ gemeldet, eine fälschlich zusammengefasste nicht.
 Aus jeder Gruppe wird ein eigener Eintrag im Verlauf, benannt nach seiner
 eigenen Referenznummer. Der Ergebnis-Bildschirm sagt, wenn es mehrere waren.
 
+### `logic/behandlung.dart` und `data/erklaerungen.dart`
+
+Die Rechnung als Ablauf statt als Liste: `sitzungen()` gruppiert die
+Positionen nach dem Behandlungsdatum, das der Parser je Zeile liest — erst
+die Untersuchung, dann die Betäubung, dann die Füllung, und beim nächsten
+Termin der Rest. Druckt die Praxis keine Zeilendaten, bleibt alles in einer
+Gruppe; das ist kein Mangel, sondern die ehrliche Wiedergabe dessen, was auf
+der Rechnung steht.
+
+`erklaerungen.dart` sagt in Alltagssprache, was eine Position umfasst. Drei
+Abgrenzungen stehen dort im Kopfkommentar und gelten im ganzen Bildschirm:
+Es ist **keine Abschrift des Tarifs** (die Sätze sind selbst geschrieben, die
+Bezeichnung kommt von der Rechnung des Nutzers), **keine Beurteilung** der
+Behandlung und **keine zahnmedizinische Beratung**. Zu einer unbekannten
+Position sagt die App, dass sie keine Erklärung hat, statt eine zu erfinden.
+
 ### `state/` — getrennte Controller statt eines Monolithen
 Ursprünglich gab es eine einzige `AppState`-Klasse für alles. Die wurde
 aufgeteilt, weil ein zentraler Zustand jede Änderung riskant macht und sich

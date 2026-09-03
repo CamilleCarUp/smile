@@ -38,6 +38,10 @@ class TariffLine {
   final double amountChf;
   final bool flagged;
 
+  /// Behandlungsdatum dieser Position, wo die Praxis eines druckt. Mehrere
+  /// Daten auf einer Rechnung heissen: mehrere Sitzungen.
+  final DateTime? date;
+
   /// Zurueckgerechnete Anzahl. Null, wenn die Position nicht aufgeschluesselt
   /// werden konnte — dann zeigt die App bewusst nichts an, statt zu raten.
   final int? quantity;
@@ -57,6 +61,7 @@ class TariffLine {
     this.quantity,
     this.taxpunkte,
     this.taxpunkteFromCatalog = false,
+    this.date,
   });
 
   bool get isResolved => quantity != null && taxpunkte != null;
@@ -69,6 +74,7 @@ class TariffLine {
         'quantity': quantity,
         'taxpunkte': taxpunkte,
         'taxpunkteFromCatalog': taxpunkteFromCatalog,
+        'date': date?.toIso8601String(),
       };
 
   factory TariffLine.fromJson(Map<String, dynamic> json) => TariffLine(
@@ -79,6 +85,7 @@ class TariffLine {
         quantity: json['quantity'] as int?,
         taxpunkte: (json['taxpunkte'] as num?)?.toDouble(),
         taxpunkteFromCatalog: (json['taxpunkteFromCatalog'] ?? false) as bool,
+        date: json['date'] == null ? null : DateTime.parse(json['date'] as String),
       );
 }
 

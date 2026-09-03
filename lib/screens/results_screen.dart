@@ -5,6 +5,7 @@ import '../state/requests_repository.dart';
 import '../theme/app_theme.dart';
 import '../widgets/smile_app_bar.dart';
 import '../state/upload_controller.dart';
+import 'behandlung_screen.dart';
 import 'request_screen.dart';
 import 'upload_screen.dart';
 
@@ -143,6 +144,18 @@ class ResultsScreen extends StatelessWidget {
               ),
 
             const SizedBox(height: 20),
+            // Erklaeren steht vor Beanstanden: Wer die Rechnung verstanden
+            // hat, stellt die bessere Frage -- oder merkt, dass sich seine
+            // Frage erledigt hat.
+            if (req.lines.isNotEmpty) ...[
+              OutlinedButton.icon(
+                icon: const Icon(Icons.menu_book_outlined, size: 18),
+                label: const Text('Behandlung verstehen'),
+                onPressed: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const BehandlungScreen())),
+              ),
+              const SizedBox(height: 12),
+            ],
             // Ohne Befund wird keine Rueckfrage angeboten. Eine App, die nach
             // "alles in Ordnung" trotzdem einen Brief an die Praxis in den
             // Vordergrund stellt, erzeugt grundlose Anfragen -- und verspielt
