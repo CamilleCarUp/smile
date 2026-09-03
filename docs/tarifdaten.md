@@ -110,6 +110,46 @@ Herausgeberin der Kalkulationshilfe für Privatpatienten (DENTOTAR®) ist und
 dass deren Nutzungsbestimmungen über sso.ch erhältlich sind. Genau die
 gehören vor die Anfrage — möglicherweise steht die Antwort dort schon.
 
+## Die Lizenzlage — gefunden, nicht mehr vermutet
+
+Das Titelblatt des amtlichen Tarifs verweist für die Nutzungsbestimmungen auf
+sso.ch. Auf den öffentlichen Seiten stehen sie **nicht**; weder die
+Tarif-Seite noch die DENTOTAR-Seite (dentotar.ch leitet dorthin um) nennen
+Lizenz, Entgelt oder eine Stelle für Dritte. Sie stehen in der *Beilage zur
+Beitrittserklärung zum Tarifvertrag DENTOTAR* — einem Lizenzvertrag, der über
+die Suche auffindbar ist.
+
+Was darin steht:
+
+- **Der Tarif ist urheberrechtlich geschützt** (1.1). Das war zu erwarten,
+  ist jetzt aber belegt statt angenommen.
+- **Lizenzgeberin ist die SSO.** Lizenznehmer sind nur Zahnärztinnen und
+  Zahnärzte in eigener fachlicher Verantwortung — SSO-Mitglieder oder
+  ausdrücklich zugelassene Einzelkontrahenten (6.1).
+- **Die Lizenz ist entgeltlich** und erlischt bei Nichtzahlung (2).
+  Unterlizenzierung ist untersagt (3), inhaltliche Änderungen ebenso (4.1).
+- **Und der entscheidende Punkt (1.3 a):** Der Tarif darf in „eigens
+  erstellten, nicht kommerziell vertriebenen Programmen oder im Rahmen von
+  Zahnarztpraxis-Software Lösungen Dritter" genutzt werden — sofern deren
+  IT-Anbieter von der SSO berechtigt worden sind. Für diese gibt es eine
+  eigene Kategorie: **„DENTOTAR® IT-Partner"**.
+
+### Was das für Smile heisst
+
+Es gibt einen benannten Weg, und er heisst nicht „Ausnahme erbitten", sondern
+**IT-Partner**. Die Anfrage an die SSO kann sich darauf beziehen statt
+allgemein um Erlaubnis zu bitten.
+
+Der Haken ist ehrlich zu benennen: Die Kategorie ist für Praxissoftware
+gedacht, hinter der ein lizenzierter Zahnarzt steht. Smile richtet sich an
+Patienten; dort gibt es keinen Lizenznehmer, in dessen Rahmen die Nutzung
+läuft. Die Frage lautet deshalb präzise: *Gibt es für eine patientenseitige
+Anwendung eine Berechtigung analog zum DENTOTAR® IT-Partner — und zu welchen
+Bedingungen?*
+
+Das ist eine Geschäftsfrage, keine Bittstellerei. Die SSO lizenziert den
+Tarif regelmässig und gegen Entgelt; es gibt einen Prozess und einen Preis.
+
 ## Regel 2 braucht keine Statistik, sondern den Tarif
 
 Diese Feststellung korrigiert einen früheren Plan. Angenommen war, für Regel
